@@ -1,0 +1,9 @@
+# O que NÃO entra na imagem (mais leve e sem segredos dentro dela).
+.env
+.git
+.ruby-lsp
+.bundle
+vendor
+extension
+docs
+*.log

@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "LinkedIn Poster — Collector",
+  "version": "0.1.0",
+  "description": "Captura o texto do post que você está vendo e sugere um comentário. Você revisa e publica.",
+  "permissions": ["storage"],
+  "host_permissions": ["https://www.linkedin.com/*", "http://localhost:9292/*"],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["https://www.linkedin.com/*"],
+      "js": ["selectors.js", "content.js"],
+      "css": ["content.css"]
+    }
+  ]
+}

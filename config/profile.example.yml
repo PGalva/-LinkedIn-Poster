@@ -1,0 +1,18 @@
+# Copy to config/profile.yml and adjust. These keywords, tone and target roles
+# drive comment suggestions, post generation and feed ranking.
+# `language` sets the language of the generated text (e.g. en-US, pt-BR).
+name: Pedro Barbosa
+headline: UX Engineer & Designer
+language: pt-BR
+tone: direct, curious and jargon-free
+target_roles:
+  - UX Engineer
+  - Product Designer
+  - Front-end Engineer
+keywords:
+  - design system
+  - accessibility
+  - React
+  - Figma
+  - Ruby on Rails
+  - UX

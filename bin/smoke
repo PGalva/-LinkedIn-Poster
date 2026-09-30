@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Smoke test: calls every API endpoint and prints the result.
+# Usage: bin/smoke                (API on localhost:9292)
+#        API_URL=http://other:9292 bin/smoke
+set -euo pipefail
+
+API="${API_URL:-http://localhost:9292}"
+fail=0
+
+call() {
+  local name="$1" method="$2" path="$3" body="${4:-}" expected="${5:-200}"
+  local out status
+  if [ "$method" = GET ]; then
+    out=$(curl -s -w '\n%{http_code}' "$API$path")
+  else
+    out=$(curl -s -w '\n%{http_code}' -X POST "$API$path" -H 'content-type: application/json' -d "$body")
+  fi
+  status=$(tail -n1 <<<"$out")
+  if [ "$status" = "$expected" ]; then echo "OK   $name"; else echo "FAIL $name ($status)"; fail=1; fi
+  head -n -1 <<<"$out"; echo; echo
+}
+
+call "health" GET /health
+call "suggest comment" POST /comments/suggest \
+  '{"post":{"text":"We are hiring a UX Engineer to own our React design system.","author":"Ana"}}'
+call "generate post" POST /posts/generate \
+  '{"brief":{"goal":"show I am looking for a UX Engineer role","topics":["design system","accessibility"]}}'
+call "rank posts" POST /posts/rank \
+  '{"posts":[{"text":"Carrot cake recipe"},{"text":"Hiring a Product Designer for our design system"}]}'
+call "expected error: empty post returns 422" POST /comments/suggest '{"post":{"text":""}}' 422
+
+[ "$fail" = 0 ] && echo "All good." || { echo "Something failed."; exit 1; }

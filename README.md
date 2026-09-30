@@ -1,0 +1,109 @@
+# LinkedIn Poster
+
+An assistant that helps you stay visible on LinkedIn while job hunting:
+
+- **Collector (Chrome extension)** — reads the post you're looking at and suggests a thoughtful comment.
+- **Post Creator** — turns a goal, audience, tone and topics into a ready-to-publish post plus hashtags.
+- **Feed Ranking** — highlights the posts in your feed that best match the roles you're targeting.
+
+**You always review before publishing.** The tool suggests; it never posts on your behalf.
+Why: see [ADR-0001](docs/adr/0001-ruby-core-with-ports-and-adapters.md).
+
+Project status and next steps: [ROADMAP](docs/ROADMAP.md).
+
+## Architecture
+
+```mermaid
+flowchart TD
+    EXT[Chrome extension<br/>captures the visible post] -->|HTTP + JSON| API
+    FORM[Web form<br/>goal, audience, tone, topics] -->|HTTP + JSON| API
+    API[API — app/api.rb<br/>thin controller, picks the AI] --> SVC
+    SVC[Services<br/>SuggestComment · GeneratePost · RankPosts] --> PR[Prompts<br/>provider-neutral Prompt]
+    SVC --> TX[Text<br/>keywords, hashtags, JSON parser]
+    SVC --> PORT[[LLM port<br/>#complete prompt → Response]]
+    PORT --> A1[Anthropic]
+    PORT --> A2[OpenAI + compatible]
+    PORT --> A3[Ollama — local]
+    PORT --> A4[Fake — tests & offline]
+```
+
+This is a **ports & adapters** (hexagonal) design. Dependencies only point inward:
+`api → services → (prompts, text, LLM port) → domain`. The domain depends on nothing.
+
+- Switching AI providers = changing `LLM_PROVIDER` in `.env`. No service code changes.
+- The core (`lib/`) is plain Ruby with zero gems, so its tests run in milliseconds without network access.
+- The API key lives only on the server, never in the browser extension.
+
+## Getting started
+
+### With Docker (recommended)
+
+```bash
+cp .env.example .env                              # start with LLM_PROVIDER=fake
+cp config/profile.example.yml config/profile.yml  # your roles, keywords and tone
+docker compose run --rm api bundle exec rake test  # run the test suite
+docker compose up --build                          # API on localhost:9292
+bash bin/smoke                                     # hit all endpoints (run on your host)
+```
+
+### Without Docker
+
+```bash
+bundle install
+cp .env.example .env
+cp config/profile.example.yml config/profile.yml
+bundle exec rake test
+bundle exec rackup -p 9292
+```
+
+### Choosing an AI provider
+
+| `LLM_PROVIDER` | Needs | Good for |
+| --- | --- | --- |
+| `fake` | nothing | tests and offline development (responses tagged `[offline]`) |
+| `ollama` | a local model (`docker compose --profile ollama up -d`, then `docker compose exec ollama ollama pull llama3.1`, and `OLLAMA_URL=http://ollama:11434`) | real AI output, free, works offline after the download |
+| `anthropic` | `ANTHROPIC_API_KEY` | best comment quality (default) |
+| `openai` | `OPENAI_API_KEY`, `OPENAI_MODEL` (and `OPENAI_BASE_URL` for any OpenAI-compatible API) | alternative provider |
+
+### Loading the extension
+
+`chrome://extensions` → enable **Developer mode** → **Load unpacked** → select the `extension/` folder.
+The API must be running on `localhost:9292`.
+
+## API
+
+| Method | Path | Body | Returns |
+| --- | --- | --- | --- |
+| GET | `/health` | — | `{ ok, provider }` |
+| POST | `/comments/suggest` | `{ post: { text, author?, url? } }` | `{ text, angle, provider }` |
+| POST | `/posts/generate` | `{ brief: { goal, topics[], audience?, tone? } }` | `{ body, hashtags[], full_text, provider }` |
+| POST | `/posts/rank` | `{ posts: [{ text, ... }], limit? }` | `[{ post, score, matched_keywords }]` |
+
+Errors: `422` invalid input · `429` AI rate limit · `502` AI provider error.
+
+## Project layout
+
+```
+lib/linkedin_poster/
+  domain/      Immutable value objects (Data.define) with validation
+  llm/         The LLM port and its adapters — the only code that knows about AI providers
+  text/        Pure functions: keyword extraction, hashtags, JSON response parsing
+  prompts/     Builders that turn domain objects into a provider-neutral Prompt
+  services/    Use cases: SuggestComment, GeneratePost, RankPosts
+app/api.rb     Thin HTTP layer (Sinatra); the composition root that picks the AI
+extension/     Chrome MV3: selectors.js (DOM), content.js (UI), background.js (API calls)
+test/          Minitest; services run against the Fake adapter
+bin/smoke      End-to-end check of every endpoint
+```
+
+## Adding a new AI provider
+
+1. Create `lib/linkedin_poster/llm/adapters/my_ai.rb` inheriting from `Base`.
+2. Implement `provider_name`, `endpoint`, `headers`, `build_body(prompt)` and `extract_text(json)`.
+3. Register it in `llm/registry.rb` and `require` it in `lib/linkedin_poster.rb`.
+4. Add a test that does `include LLMContract` — if it passes, the rest of the system works.
+5. Set `LLM_PROVIDER=my_ai`. No service changes.
+
+## Tech stack
+
+Ruby 3.3 · Sinatra · Puma · Minitest · Docker · Chrome Extension (Manifest V3)

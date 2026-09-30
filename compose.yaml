@@ -1,0 +1,25 @@
+# docker compose = "rode estes containers juntos, com esta configuração".
+#
+#   docker compose up --build                        # sobe a API em localhost:9292
+#   docker compose run --rm api bundle exec rake test  # roda os testes
+#   docker compose --profile ollama up -d            # sobe também uma IA local
+services:
+  api:
+    build: .
+    ports:
+      - "9292:9292"          # porta do seu PC : porta do container
+    env_file: .env           # LLM_PROVIDER, chaves etc.
+    volumes:
+      - .:/app               # seu código entra "ao vivo" no container (não precisa rebuild a cada mudança)
+
+  # Opcional: IA local e gratuita. Só sobe com --profile ollama.
+  ollama:
+    image: ollama/ollama
+    profiles: ["ollama"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama   # modelos baixados sobrevivem ao container
+
+volumes:
+  ollama-models:
