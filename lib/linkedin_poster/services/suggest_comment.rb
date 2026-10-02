@@ -40,7 +40,7 @@ module LinkedinPoster
                     .gsub(/(^|\s)#[\p{L}\p{N}_]+/, "\\1") # remove hashtags
                     .gsub(/[ \t]{2,}/, " ")
                     .strip[0, MAX_COMMENT_CHARS]
-        raise LLM::InvalidResponseError, "a IA devolveu um comentário vazio" if clean.empty?
+        raise LLM::InvalidResponseError, "the AI returned an empty comment" if clean.empty?
 
         clean
       end

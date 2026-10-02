@@ -36,7 +36,7 @@ module LinkedinPoster
         response = http.request(request)
         RawResponse.new(status: response.code.to_i, body: response.body.to_s)
       rescue *NETWORK_ERRORS => e
-        raise UnavailableError, "falha de rede ao chamar #{uri.host}: #{e.class}"
+        raise UnavailableError, "network error calling #{uri.host}: #{e.class}"
       end
     end
   end

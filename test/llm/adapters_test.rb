@@ -69,7 +69,7 @@ class OpenAIAdapterTest < Minitest::Test
   include TestSupport
   include LLMContract
 
-  def adapter(http:) = LLM::Adapters::OpenAI.new(api_key: "sk-test", model: "gpt-test", http:)
+  def adapter(http:) = LLM::Adapters::OpenAI.new(api_key: "sk-test", model: "gpt-test", base_url: "https://api.openai.com/v1", http:)
   def success_body = { choices: [{ message: { content: "olá" } }] }
 
   def test_sends_system_as_first_message
@@ -94,7 +94,7 @@ class OllamaAdapterTest < Minitest::Test
   include TestSupport
   include LLMContract
 
-  def adapter(http:) = LLM::Adapters::Ollama.new(model: "llama-test", http:)
+  def adapter(http:) = LLM::Adapters::Ollama.new(model: "llama-test", base_url: "http://localhost:11434", http:)
   def success_body = { message: { role: "assistant", content: "olá" } }
 
   def test_disables_streaming
@@ -103,6 +103,13 @@ class OllamaAdapterTest < Minitest::Test
 
     assert_equal false, http.last[:body][:stream]
     assert_equal "http://localhost:11434/api/chat", http.last[:url]
+  end
+
+  def test_asks_for_json_output
+    http = FakeHttp.new(body: success_body)
+    adapter(http:).complete(sample_prompt)
+
+    assert_equal "json", http.last[:body][:format]
   end
 end
 

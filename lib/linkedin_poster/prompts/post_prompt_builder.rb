@@ -2,9 +2,12 @@
 
 module LinkedinPoster
   module Prompts
-    # Monta o prompt do "Criador de Posts" a partir do formulário
-    # (Objetivo, Público, Tom, Tópicos) + perfil do usuário.
+    # Builds the Post Creator prompt from the form (Goal, Audience, Tone, Topics)
+    # plus the user's profile.
     class PostPromptBuilder
+      # Bump on every prompt change so Prompt Lab runs can be compared by version.
+      VERSION = 1
+
       def build(brief:, profile:)
         Domain::Prompt.new(
           system: system_prompt(profile),
@@ -18,28 +21,28 @@ module LinkedinPoster
 
       def system_prompt(profile)
         <<~PROMPT
-          Você é redator(a) de LinkedIn para #{profile.name} (#{profile.headline}).
+          You are a LinkedIn copywriter for #{profile.name} (#{profile.headline}).
 
-          Regras do post:
-          - Idioma: #{profile.language}.
-          - Primeira linha é um gancho forte (sem clickbait).
-          - Parágrafos curtos (1 a 3 linhas), entre 600 e 1300 caracteres no total.
-          - Termine com uma chamada para ação coerente com o objetivo.
-          - Não invente números, empresas ou experiências.
-          - NÃO coloque hashtags no corpo; sugira-as à parte.
+          Post rules:
+          - Write in #{profile.language}.
+          - The first line is a strong hook (no clickbait).
+          - Short paragraphs (1 to 3 lines), 600 to 1300 characters in total.
+          - End with a call to action that fits the goal.
+          - Never invent numbers, companies or experience.
+          - Do NOT put hashtags in the body; suggest them separately.
 
-          Responda APENAS com JSON no formato:
-          {"body": "texto do post", "hashtags": ["termo1", "termo2", "termo3"]}
+          Reply ONLY with JSON in this format:
+          {"body": "post text", "hashtags": ["term1", "term2", "term3"]}
         PROMPT
       end
 
       def user_prompt(brief, profile)
         <<~PROMPT
-          Objetivo do post: #{brief.goal}
-          Público-alvo: #{brief.audience}
-          Tom: #{brief.tone || profile.tone}
-          Tópicos: #{brief.topics.join(', ')}
-          Cargos que o autor busca: #{profile.target_roles.join(', ')}
+          Goal: #{brief.goal}
+          Audience: #{brief.audience}
+          Tone: #{brief.tone || profile.tone}
+          Topics: #{brief.topics.join(', ')}
+          Roles the author is applying for: #{profile.target_roles.join(', ')}
         PROMPT
       end
     end

@@ -27,15 +27,15 @@ module LinkedinPoster
 
           json = JSON.parse(raw.body)
           text = extract_text(json).to_s
-          raise InvalidResponseError, "#{provider_name} devolveu texto vazio" if text.strip.empty?
+          raise InvalidResponseError, "#{provider_name} returned empty text" if text.strip.empty?
 
           Response.new(text:, provider: provider_name, model: @model, usage: extract_usage(json))
         rescue JSON::ParserError => e
-          raise InvalidResponseError, "#{provider_name} devolveu JSON inválido: #{e.message}"
+          raise InvalidResponseError, "#{provider_name} returned invalid JSON: #{e.message}"
         end
 
         def provider_name
-          raise NotImplementedError, "#{self.class} precisa definir #provider_name"
+          raise NotImplementedError, "#{self.class} must define #provider_name"
         end
 
         private
@@ -50,14 +50,14 @@ module LinkedinPoster
         def raise_for_status!(raw)
           case raw.status
           when 200..299 then nil
-          when 429 then raise RateLimitedError, "#{provider_name}: limite de requisições atingido"
-          when 500..599 then raise UnavailableError, "#{provider_name} indisponível (#{raw.status})"
-          else raise RequestError, "#{provider_name} respondeu #{raw.status}: #{raw.body.to_s[0, 300]}"
+          when 429 then raise RateLimitedError, "#{provider_name}: rate limit reached"
+          when 500..599 then raise UnavailableError, "#{provider_name} unavailable (#{raw.status})"
+          else raise RequestError, "#{provider_name} responded #{raw.status}: #{raw.body.to_s[0, 300]}"
           end
         end
 
         def require_config!(value, name)
-          raise ConfigurationError, "#{name} não está definida" if value.to_s.strip.empty?
+          raise ConfigurationError, "#{name} is not set" if value.to_s.strip.empty?
 
           value
         end

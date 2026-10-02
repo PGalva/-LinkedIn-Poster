@@ -1,18 +1,24 @@
-# Copy to config/profile.yml and adjust. These keywords, tone and target roles
-# drive comment suggestions, post generation and feed ranking.
-# `language` sets the language of the generated text (e.g. en-US, pt-BR).
+# Copy to config/profile.yml and adjust. This drives comment suggestions,
+# post generation and feed ranking.
 name: Pedro Barbosa
 headline: UX Engineer & Designer
-language: pt-BR
+language: en-US           # language of the generated text (e.g. en-US, pt-BR)
 tone: direct, curious and jargon-free
-target_roles:
-  - UX Engineer
-  - Product Designer
-  - Front-end Engineer
+
+# The jobs you want to apply for. `terms` are the words recruiters actually use;
+# a post that mentions any term matches the target. Matching ignores case and accents.
+job_targets:
+  - name: UI/UX Design
+    terms: [ui/ux, ux/ui, ux designer, ui designer, product designer, ux engineer, ux design, ui design]
+  - name: Co-op
+    terms: [coop, co-op student, internship, intern, work term, estágio]
+  - name: Developer
+    terms: [front-end developer, frontend developer, front-end engineer, web developer, software developer, react developer]
+
+# Skills you want to be seen with. Each one mentioned in a post adds a little to its score.
 keywords:
   - design system
   - accessibility
   - React
   - Figma
   - Ruby on Rails
-  - UX

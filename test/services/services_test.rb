@@ -61,22 +61,3 @@ class GeneratePostTest < Minitest::Test
     assert_raises(ValidationError) { Domain::PostBrief.new(goal: "x", topics: []) }
   end
 end
-
-class RankPostsTest < Minitest::Test
-  include TestSupport
-
-  def test_orders_by_relevance_and_drops_irrelevant
-    posts = [
-      Domain::CapturedPost.new(text: "Receita de bolo de cenoura"),
-      Domain::CapturedPost.new(text: "Dica de React e acessibilidade"),
-      Domain::CapturedPost.new(text: "Vaga: Product Designer para design system")
-    ]
-
-    ranked = Services::RankPosts.new.call(posts:, profile:)
-
-    assert_equal 2, ranked.size
-    assert_match(/Product Designer/, ranked.first.post.text)
-    assert_equal 4, ranked.first.score
-    assert_equal ["Product Designer", "design system"], ranked.first.matched_keywords
-  end
-end

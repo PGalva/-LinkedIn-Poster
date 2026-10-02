@@ -1,24 +1,36 @@
-// Service worker: a ÚNICA parte da extensão que conversa com a API.
-// Por que não chamar a API direto do content script? Porque ele roda dentro da
-// página do LinkedIn e esbarraria em CORS/mixed-content. Aqui, com
-// host_permissions, a chamada para localhost é permitida.
+// Service worker: the ONLY part of the extension that talks to the API.
+// The content script (feed) and the popup (Post Creator) send it messages;
+// it maps each message type to an endpoint. Same idea as the LLM adapters:
+// one place that knows the outside world.
 //
-// A chave da IA NUNCA fica na extensão — fica no servidor Ruby.
+// The AI key NEVER lives in the extension — it stays on the Rails server.
 const API_URL = "http://localhost:9292";
 
+const ROUTES = {
+  "suggest-comment": (msg) => ["/comments/suggest", { post: msg.post }],
+  "generate-post": (msg) => ["/posts/generate", { brief: msg.brief }],
+  "rank-posts": (msg) => ["/posts/rank", { posts: msg.posts, limit: msg.limit }],
+};
+
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (message.type !== "suggest-comment") return false;
+  const route = ROUTES[message.type];
+  if (!route) return false;
 
-  fetch(`${API_URL}/comments/suggest`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ post: message.post }),
-  })
-    .then(async (res) => {
-      const data = await res.json();
-      sendResponse(res.ok ? { ok: true, data } : { ok: false, error: data.error });
-    })
-    .catch(() => sendResponse({ ok: false, error: "API offline? Rode `bundle exec rackup -p 9292`." }));
-
-  return true; // mantém o canal aberto para a resposta assíncrona
+  const [path, body] = route(message);
+  callApi(path, body).then(sendResponse);
+  return true; // keep the channel open for the async response
 });
+
+async function callApi(path, body) {
+  try {
+    const res = await fetch(`${API_URL}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    return res.ok ? { ok: true, data } : { ok: false, error: data.error ?? `HTTP ${res.status}` };
+  } catch {
+    return { ok: false, error: "API is offline. Start it with `docker compose up`." };
+  }
+}

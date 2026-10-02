@@ -11,17 +11,17 @@ module LinkedinPoster
 
       def parse_json(text, required_keys: [])
         candidate = text.to_s[FENCED, 1] || text.to_s[BARE]
-        raise LLM::InvalidResponseError, "a resposta da IA não contém JSON" unless candidate
+        raise LLM::InvalidResponseError, "the AI response contains no JSON" unless candidate
 
         data = JSON.parse(candidate)
-        raise LLM::InvalidResponseError, "a IA devolveu JSON que não é objeto" unless data.is_a?(Hash)
+        raise LLM::InvalidResponseError, "the AI returned JSON that is not an object" unless data.is_a?(Hash)
 
         missing = required_keys.map(&:to_s) - data.keys
-        raise LLM::InvalidResponseError, "faltando chaves na resposta: #{missing.join(', ')}" if missing.any?
+        raise LLM::InvalidResponseError, "missing keys in the AI response: #{missing.join(', ')}" if missing.any?
 
         data
       rescue JSON::ParserError => e
-        raise LLM::InvalidResponseError, "JSON inválido na resposta da IA: #{e.message}"
+        raise LLM::InvalidResponseError, "invalid JSON in the AI response: #{e.message}"
       end
     end
   end

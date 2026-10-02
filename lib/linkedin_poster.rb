@@ -17,6 +17,7 @@ end
 # (Em Rails o Zeitwerk faria isso sozinho; aqui deixamos explícito para você ver
 #  quem depende de quem.)
 %w[
+  domain/job_target
   domain/user_profile
   domain/captured_post
   domain/post_brief

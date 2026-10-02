@@ -3,8 +3,13 @@
 module LinkedinPoster
   module LLM
     module Adapters
-      # Modelo local via Ollama (sem custo, sem chave). Ótimo para desenvolver
-      # sem gastar créditos — e prova de que a porta funciona com qualquer IA.
+      # Local model via Ollama (free, no key). Great for development without
+      # spending credits — and proof that the port works with any AI.
+      #
+      # OLLAMA_URL depends on where Ollama runs:
+      #   - Compose service (--profile ollama): http://ollama:11434
+      #   - Installed on your machine, API in Docker: http://host.docker.internal:11434
+      #   - Both on your machine, no Docker: http://localhost:11434
       class Ollama < Base
         def initialize(model: ENV.fetch("OLLAMA_MODEL", "llama3.1"),
                        base_url: ENV.fetch("OLLAMA_URL", "http://localhost:11434"),
@@ -23,6 +28,8 @@ module LinkedinPoster
           {
             model: @model,
             stream: false,
+            # Small local models often wrap JSON in prose; this forces valid JSON.
+            format: "json",
             options: { temperature: prompt.temperature, num_predict: prompt.max_tokens },
             messages: [
               { role: "system", content: prompt.system },

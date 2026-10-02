@@ -1,11 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "LinkedIn Poster — Collector",
-  "version": "0.1.0",
-  "description": "Captura o texto do post que você está vendo e sugere um comentário. Você revisa e publica.",
+  "name": "LinkedIn Poster",
+  "version": "0.2.0",
+  "description": "Suggests comments on the post you're viewing and writes posts from a short brief. You review and publish.",
   "permissions": ["storage"],
   "host_permissions": ["https://www.linkedin.com/*", "http://localhost:9292/*"],
   "background": { "service_worker": "background.js" },
+  "action": {
+    "default_title": "LinkedIn Poster — Post Creator",
+    "default_popup": "popup.html"
+  },
   "content_scripts": [
     {
       "matches": ["https://www.linkedin.com/*"],

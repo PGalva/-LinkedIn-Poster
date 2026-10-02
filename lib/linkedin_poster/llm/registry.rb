@@ -16,7 +16,7 @@ module LinkedinPoster
     def self.build(provider = ENV.fetch("LLM_PROVIDER", "anthropic"), **options)
       adapter_class = ADAPTERS.fetch(provider.to_s.downcase) do
         raise ConfigurationError,
-              "provedor de LLM desconhecido: #{provider.inspect}. Opções: #{ADAPTERS.keys.join(', ')}"
+              "unknown LLM provider: #{provider.inspect}. Options: #{ADAPTERS.keys.join(', ')}"
       end
       adapter_class.new(**options)
     end

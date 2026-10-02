@@ -42,13 +42,13 @@ module LinkedinPoster
         # para você ver que o dado atravessou todas as camadas.
         def offline_response(prompt)
           post_start = prompt.user[%r{<post>\s*(.{1,80})}m, 1]&.strip&.tr("\n", " ")
-          topics = prompt.user[/^Tópicos: (.+)$/, 1]
+          topics = prompt.user[/^Topics: (.+)$/, 1]
 
           JSON.generate(
-            comment: "[offline] Comentário de exemplo sobre: \"#{post_start || 'post'}...\"",
+            comment: "[offline] Sample comment about: \"#{post_start || 'post'}...\"",
             angle: "insight",
-            body: "[offline] Post de exemplo sobre #{topics || 'seus tópicos'}.\n\nTroque LLM_PROVIDER para gerar texto de verdade.",
-            hashtags: %w[offline teste]
+            body: "[offline] Sample post about #{topics || 'your topics'}.\n\nSet LLM_PROVIDER to a real AI to generate actual text.",
+            hashtags: %w[offline sample]
           )
         end
       end

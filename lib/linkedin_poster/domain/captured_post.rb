@@ -8,7 +8,7 @@ module LinkedinPoster
     CapturedPost = Data.define(:text, :author, :url) do
       def initialize(text:, author: nil, url: nil)
         clean = text.to_s.strip
-        raise ValidationError, "o texto do post está vazio" if clean.empty?
+        raise ValidationError, "the post text is empty" if clean.empty?
 
         super(text: clean, author: author&.strip, url: url)
       end

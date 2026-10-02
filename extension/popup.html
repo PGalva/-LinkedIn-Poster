@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Post Creator</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Post Creator</h1>
+
+      <form id="brief-form">
+        <label for="goal">Goal <span aria-hidden="true">*</span></label>
+        <textarea id="goal" name="goal" rows="2" required
+          placeholder="e.g. Show I'm looking for a UX co-op this winter"></textarea>
+
+        <label for="topics">Topics <span aria-hidden="true">*</span></label>
+        <input id="topics" name="topics" required placeholder="design system, accessibility, React" />
+        <p class="hint" id="topics-hint">Separate with commas.</p>
+
+        <div class="row">
+          <div>
+            <label for="audience">Audience</label>
+            <input id="audience" name="audience" placeholder="Recruiters" />
+          </div>
+          <div>
+            <label for="tone">Tone</label>
+            <select id="tone" name="tone">
+              <option value="">From my profile</option>
+              <option>professional</option>
+              <option>friendly and approachable</option>
+              <option>storytelling</option>
+              <option>direct and concise</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" id="generate">Generate post</button>
+      </form>
+
+      <p id="status" role="status" aria-live="polite"></p>
+
+      <section id="result" hidden>
+        <label for="body">Post</label>
+        <textarea id="body" rows="10"></textarea>
+
+        <label for="hashtags">Hashtags</label>
+        <input id="hashtags" />
+
+        <button type="button" id="copy">Copy post</button>
+        <p class="hint">Review it, then paste it into LinkedIn yourself.</p>
+      </section>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

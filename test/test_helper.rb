@@ -10,7 +10,11 @@ module TestSupport
     Domain::UserProfile.from_h(
       name: "Pedro",
       headline: "UX Engineer & Designer",
-      target_roles: ["UX Engineer", "Product Designer"],
+      job_targets: [
+        { name: "UI/UX Design", terms: ["ux engineer", "ux designer", "ui designer", "product designer", "ux/ui"] },
+        { name: "Co-op", terms: ["coop", "internship", "intern", "estágio"] },
+        { name: "Developer", terms: ["front-end developer", "frontend developer", "software developer"] }
+      ],
       keywords: ["design system", "React", "acessibilidade", "Ruby"],
       tone: "direto e curioso"
     )
