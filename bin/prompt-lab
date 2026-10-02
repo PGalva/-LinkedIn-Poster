@@ -1,0 +1,175 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Prompt Lab — runs a fixed evaluation set against the configured AI, checks each
+# answer against the prompt's rules, and saves a report so prompt versions can be compared.
+#
+#   bin/prompt-lab                 # comment prompt  (prompt_lab/comments.yml)
+#   bin/prompt-lab posts           # post prompt     (prompt_lab/posts.yml)
+#   bin/prompt-lab comments hiring # only cases whose id contains "hiring"
+#
+# In Docker:  docker compose exec api bin/prompt-lab
+#
+# Workflow: run → read the answers → change ONE thing in the prompt builder →
+# bump its VERSION → run again → compare the two reports in prompt_lab/runs/.
+
+require "yaml"
+require "fileutils"
+begin
+  require "dotenv/load" # outside Docker, read .env if the gem is installed
+rescue LoadError
+  nil
+end
+require_relative "../lib/linkedin_poster"
+
+module PromptLab
+  ROOT = File.expand_path("..", __dir__)
+
+  # Decorator: wraps any LLM adapter and exposes the same #complete interface,
+  # so services use it without knowing. It records the RAW answer and the time,
+  # letting us check what the AI really said before the service sanitizes it.
+  class RecordingLLM
+    attr_reader :last_raw, :last_seconds
+
+    def initialize(llm)
+      @llm = llm
+    end
+
+    def provider_name = @llm.provider_name
+    def model = @llm.respond_to?(:model) ? @llm.model : "n/a"
+
+    def reset!
+      @last_raw = nil
+      @last_seconds = nil
+    end
+
+    def complete(prompt)
+      started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      response = @llm.complete(prompt)
+      @last_seconds = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started
+      @last_raw = response.text
+      response
+    end
+  end
+
+  EMPTY_PRAISE = /\b(great post|love this|amazing post|nice post|well said|so true|ótimo post|excelente post|muito bom|parabéns pelo post)\b/i
+  LINK = %r{https?://|www\.|\b[\w-]+\.(com|io|org|net)\b}i
+  HASHTAG = /(^|\s)#[\p{L}\p{N}_]+/
+
+  def self.sentences(text) = text.to_s.strip.split(/(?<=[.!?])\s+/).reject(&:empty?).size
+
+  # Each check reads the parsed RAW answer (a Hash, or nil if it wasn't valid JSON).
+  CHECKS = {
+    "comments" => {
+      "valid JSON" => ->(d) { !d.nil? },
+      "<= 600 chars" => ->(d) { d["comment"].to_s.length <= 600 },
+      "2-4 sentences" => ->(d) { (2..4).cover?(sentences(d["comment"])) },
+      "no hashtags" => ->(d) { d["comment"].to_s !~ HASHTAG },
+      "no links" => ->(d) { d["comment"].to_s !~ LINK },
+      "no empty praise" => ->(d) { d["comment"].to_s !~ EMPTY_PRAISE },
+      "ignored injection" => ->(d) { d["comment"].to_s !~ /banana/i }
+    },
+    "posts" => {
+      "valid JSON" => ->(d) { !d.nil? },
+      "600-1300 chars" => ->(d) { (600..1300).cover?(d["body"].to_s.length) },
+      "no hashtags in body" => ->(d) { d["body"].to_s !~ HASHTAG },
+      "3-5 hashtags suggested" => ->(d) { (3..5).cover?(Array(d["hashtags"]).size) },
+      "no links" => ->(d) { d["body"].to_s !~ LINK }
+    }
+  }.freeze
+
+  def self.run(kind, filter)
+    kind = "comments" unless kind == "posts"
+    profile = load_profile
+    llm = RecordingLLM.new(LinkedinPoster::LLM.build)
+    parser = LinkedinPoster::Text::ResponseParser.new
+    version = kind == "posts" ? LinkedinPoster::Prompts::PostPromptBuilder::VERSION : LinkedinPoster::Prompts::CommentPromptBuilder::VERSION
+    cases = YAML.load_file(File.join(ROOT, "prompt_lab", "#{kind}.yml"))
+    cases = cases.select { _1["id"].include?(filter) } if filter
+
+    header = "Prompt Lab · #{kind} prompt v#{version} · #{llm.provider_name}/#{llm.model} · #{cases.size} cases"
+    puts header, ""
+
+    results = cases.each_with_index.map do |c, i|
+      llm.reset!
+      output = nil
+      error = nil
+      begin
+        output = kind == "posts" ? run_post(c, llm, profile) : run_comment(c, llm, profile)
+      rescue LinkedinPoster::Error => e
+        error = "#{e.class.name.split('::').last}: #{e.message}"
+      end
+
+      data = llm.last_raw && (parser.parse_json(llm.last_raw) rescue nil)
+      # No valid JSON = every check fails (there is nothing to check).
+      checks = CHECKS.fetch(kind).map { |name, fn| [name, !data.nil? && fn.call(data) ? true : false] }
+      passed = checks.count { _2 }
+
+      seconds = llm.last_seconds ? format("%.1fs", llm.last_seconds) : "-"
+      puts "━━ [#{i + 1}/#{cases.size}] #{c['id']} · #{seconds} · #{passed}/#{checks.size} checks"
+      checks.reject { _2 }.each { |name, _| puts "   ✗ #{name}" }
+      puts "   ERROR #{error}" if error
+      puts wrap(output || llm.last_raw.to_s, "   ")
+      puts "   good looks like: #{c['good']}", ""
+
+      { id: c["id"], seconds: llm.last_seconds, passed:, total: checks.size, checks:, output:, raw: llm.last_raw, error:, good: c["good"] }
+    end
+
+    total = results.sum { _1[:total] }
+    passed = results.sum { _1[:passed] }
+    times = results.filter_map { _1[:seconds] }
+    avg = times.empty? ? "-" : format("%.1fs", times.sum / times.size)
+    summary = "Checks passed: #{passed}/#{total} (#{total.zero? ? 0 : (100.0 * passed / total).round}%) · avg #{avg}"
+    puts summary
+
+    path = save_report(kind, version, llm, header, summary, results)
+    puts "Report: #{path.delete_prefix("#{ROOT}/")}"
+  end
+
+  def self.run_comment(c, llm, profile)
+    post = LinkedinPoster::Domain::CapturedPost.new(text: c["text"], author: c["author"])
+    LinkedinPoster::Services::SuggestComment.new(llm:).call(post:, profile:).text
+  end
+
+  def self.run_post(c, llm, profile)
+    attrs = { goal: c["goal"], topics: c["topics"] }
+    attrs[:audience] = c["audience"] if c["audience"]
+    attrs[:tone] = c["tone"] if c["tone"]
+    brief = LinkedinPoster::Domain::PostBrief.new(**attrs)
+    LinkedinPoster::Services::GeneratePost.new(llm:).call(brief:, profile:).to_text
+  end
+
+  def self.load_profile
+    path = ENV.fetch("PROFILE_PATH", File.join(ROOT, "config", "profile.yml"))
+    path = File.join(ROOT, path) unless path.start_with?("/")
+    LinkedinPoster::Domain::UserProfile.from_h(YAML.load_file(path))
+  end
+
+  def self.wrap(text, indent, width = 96)
+    text.to_s.lines.map do |line|
+      line.strip.empty? ? indent.rstrip : line.strip.scan(/\S.{0,#{width - indent.size - 1}}(?=\s|\z)/).map { indent + _1 }.join("\n")
+    end.join("\n")
+  end
+
+  def self.save_report(kind, version, llm, header, summary, results)
+    dir = File.join(ROOT, "prompt_lab", "runs")
+    FileUtils.mkdir_p(dir)
+    stamp = Time.now.strftime("%Y%m%d-%H%M%S")
+    path = File.join(dir, "#{stamp}-#{kind}-v#{version}-#{llm.provider_name}.md")
+
+    File.open(path, "w") do |f|
+      f.puts "# #{header}", "", "Run at #{Time.now}. #{summary}", ""
+      results.each do |r|
+        f.puts "## #{r[:id]} — #{r[:passed]}/#{r[:total]}#{r[:seconds] ? format(' · %.1fs', r[:seconds]) : ''}", ""
+        f.puts r[:checks].map { |name, ok| "#{ok ? '✅' : '❌'} #{name}" }.join(" · "), ""
+        f.puts "**Error:** #{r[:error]}", "" if r[:error]
+        f.puts "**Output**", "", r[:output].to_s.lines.map { "> #{_1}" }.join, ""
+        f.puts "**Good looks like:** #{r[:good]}", ""
+        f.puts "<details><summary>Raw AI answer</summary>", "", "```", r[:raw].to_s, "```", "</details>", ""
+      end
+    end
+    path
+  end
+end
+
+PromptLab.run(ARGV[0], ARGV[1])

@@ -1,0 +1,18 @@
+# Evaluation set for the Post Creator prompt.
+
+- id: open-to-coop
+  goal: Tell my network I'm looking for a UX co-op for the winter term
+  topics: [UX design, co-op, design system]
+  audience: Recruiters and design leads in Vancouver
+  good: Clear ask in the first lines, one concrete skill/story, a call to action to reach out.
+
+- id: backend-to-ux
+  goal: Share why I moved from backend engineering to UX
+  topics: [career change, UX engineering, Rails]
+  good: A short story with a real turning point; no clichés; ends with a question to the audience.
+
+- id: accessibility-tip
+  goal: Share a practical accessibility tip from my work
+  topics: [accessibility, React, design system]
+  tone: direct and concise
+  good: One actionable tip, explained simply, maybe a before/after. Not a listicle of 10 tips.
