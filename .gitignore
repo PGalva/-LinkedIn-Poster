@@ -2,4 +2,8 @@
 config/profile.yml
 .bundle/
 vendor/
+log/
+tmp/
 *.log
+_to_delete/
+prompt_lab/runs/

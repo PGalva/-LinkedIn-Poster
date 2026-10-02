@@ -1,6 +1,6 @@
 # ADR-0001: Plain-Ruby core with ports & adapters to isolate the AI provider
 
-**Status:** Accepted
+**Status:** Accepted — the HTTP framework choice (Sinatra) is superseded by [ADR-0002](0002-rails-as-the-http-layer.md)
 **Date:** 2026-09-27
 **Deciders:** Pedro Barbosa
 

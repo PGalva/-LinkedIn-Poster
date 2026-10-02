@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "dotenv/load" # carrega o .env
-require_relative "app/api"
+require_relative "config/environment"
 
-run Api
+run Rails.application
+Rails.application.load_server

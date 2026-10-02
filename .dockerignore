@@ -1,9 +1,12 @@
-# O que NÃO entra na imagem (mais leve e sem segredos dentro dela).
+# What does NOT go into the image (smaller, and no secrets inside it).
 .env
 .git
 .ruby-lsp
 .bundle
 vendor
+log
+tmp
 extension
 docs
+_to_delete
 *.log
