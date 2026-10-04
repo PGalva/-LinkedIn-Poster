@@ -3,6 +3,45 @@
 Where the code changed, and why — one section per step, newest first.
 Paths are relative to the repository root. See [ROADMAP](ROADMAP.md) for what comes next.
 
+## 0.6.1 — Slow local models: clear timeout and faster posts
+
+**Why:** on CPU, Ollama took longer than 180 s to write a post and the popup only said
+`network error calling ollama: Net::ReadTimeout`.
+
+| Area | File | Change |
+| --- | --- | --- |
+| LLM | `lib/linkedin_poster/llm/http_transport.rb` | A read timeout now says how long we waited and what to do |
+| Adapters | `lib/linkedin_poster/llm/adapters/ollama.rb` | `OLLAMA_TIMEOUT` (default 300 s); `keep_alive` (`OLLAMA_KEEP_ALIVE`, default 30m) keeps the model loaded between requests |
+| Prompts | `lib/linkedin_poster/prompts/post_prompt_builder.rb` | `max_tokens` 1400 → 900: enough for the post, less waiting |
+| Extension | `extension/popup.js`, `extension/content.js` | Honest waiting messages (1–3 minutes on CPU) |
+| Config | `.env.example` | Documents the two new variables |
+| Tests | `test/llm/adapters_test.rb` | Timeout produces the explained error |
+
+## 0.6.0 — New LinkedIn feed selectors and Post Creator v2 (engagement)
+
+**Why:** the "Suggest comment" button never showed up on the real feed. LinkedIn moved to new
+markup with random CSS classes, so `div.feed-shared-update-v2` matched **0** posts. The Post Creator
+needed to start from what *you* want to say and to aim for posts people answer.
+
+| Area | File | Change |
+| --- | --- | --- |
+| Extension | `extension/selectors.js` | Current feed first (`[role="listitem"][componentkey^="update-card"]`, `[data-testid="expandable-text-box"]`), old feed as fallback; author read from the "…" menu's `aria-label` |
+| Extension | `extension/content.js` | `findAuthor()` handles both markups |
+| Extension | `extension/content.css` | Button no longer stretches full width; translucent colors work in LinkedIn's dark theme |
+| Extension | `extension/popup.html`, `popup.js`, `popup.css` | **"What do you want to say?"** is the main field; Goal is a short list; topics/audience/tone under "More options"; alternative hooks with "Use"; live engagement checklist; last draft is remembered |
+| Extension | `extension/background.js`, `dev/feed.html` | New `check-post` route; dev feed gains a post with the new LinkedIn markup |
+| Extension | `extension/manifest.json` | Version 0.3.0 |
+| Domain | `lib/linkedin_poster/domain/post_brief.rb` | New `idea`; needs an idea **or** a goal; topics are optional |
+| Domain | `lib/linkedin_poster/domain/generated_post.rb` | New `hooks` and `checks`; `to_h` serializes the checks |
+| Text rules | `lib/linkedin_poster/text/engagement_check.rb` | **New.** Checklist without AI: hook ≤ 150 chars, closing question, short paragraphs, 600–1300 chars, no links, 3–5 hashtags, no engagement bait |
+| Prompts | `lib/linkedin_poster/prompts/post_prompt_builder.rb` | v3: the idea is the core; engagement rules; 2 alternative hooks; writes in the idea's language |
+| Services | `lib/linkedin_poster/services/generate_post.rb` | Detects the idea's language, cleans hooks, runs the checklist |
+| LLM | `lib/linkedin_poster/llm/adapters/fake.rb` | Offline answer includes hooks and a closing question |
+| HTTP | `app/controllers/posts_controller.rb`, `config/routes.rb` | Accepts `idea`; **new** `POST /posts/check` (rules only, instant) |
+| Prompt Lab | `bin/prompt-lab`, `prompt_lab/posts.yml` | Post cases start from an idea (one in Portuguese, one goal-only); every case is scored by the engagement checklist |
+| Tests | `test/text/engagement_check_test.rb` | **New.** One test per rule |
+| Tests | `test/services/services_test.rb`, `test/integration/api_test.rb` | Idea-or-goal rule, idea in the prompt + language, hooks/checks, `/posts/check` |
+
 ## 0.5.0 — Prompt v2 and Phase 2 dev feed
 
 **Why:** the first real-AI run (Ollama) passed every automatic check but replied in the wrong

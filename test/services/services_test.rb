@@ -57,7 +57,33 @@ class GeneratePostTest < Minitest::Test
     assert_includes post.to_text, "#DesignSystem #Acessibilidade"
   end
 
-  def test_brief_requires_topics
-    assert_raises(ValidationError) { Domain::PostBrief.new(goal: "x", topics: []) }
+  def test_brief_needs_an_idea_or_a_goal
+    assert_raises(ValidationError) { Domain::PostBrief.new(idea: "  ", goal: "", topics: ["ux"]) }
+    assert Domain::PostBrief.new(idea: "I moved from backend to UX")
+    assert Domain::PostBrief.new(goal: "find a co-op")
+  end
+
+  def test_idea_goes_into_the_prompt_and_sets_the_language
+    llm = LLM::Adapters::Fake.new
+    brief = Domain::PostBrief.new(idea: "Depois de cinco anos no backend, percebi que o que eu mais gostava era entender as pessoas que usam o sistema.")
+    Services::GeneratePost.new(llm:).call(brief:, profile:)
+
+    prompt = llm.prompts.last
+    assert_includes prompt.user, "<idea>"
+    assert_includes prompt.user, "cinco anos no backend"
+    assert_includes prompt.system, "Write in Portuguese"
+    refute_includes prompt.user, "Topics:" # no topics given -> no empty line for the AI
+  end
+
+  def test_returns_hooks_and_engagement_checks
+    llm = LLM::Adapters::Fake.new(responses: [
+      %({"body": "Five years of backend taught me one UX lesson.\\n\\nWhat taught you yours?", "hooks": ["  Alt one\\nextra  ", "", "Alt two", "Alt three"], "hashtags": ["UX"]})
+    ])
+
+    post = Services::GeneratePost.new(llm:).call(brief:, profile:)
+
+    assert_equal ["Alt one", "Alt two"], post.hooks
+    assert(post.checks.find { _1.id == "question" }.passed)
+    assert_kind_of Hash, post.to_h[:checks].first
   end
 end

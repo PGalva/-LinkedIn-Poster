@@ -12,9 +12,16 @@
 
 function collectPost(postEl) {
   const text = postEl.querySelector(LP_SELECTORS.text)?.innerText?.trim() ?? "";
-  const author = postEl.querySelector(LP_SELECTORS.author)?.innerText?.trim() ?? null;
   const url = postEl.querySelector(LP_SELECTORS.permalink)?.href ?? location.href;
-  return { text, author, url };
+  return { text, author: findAuthor(postEl), url };
+}
+
+// Current feed: the author's name only appears reliably in the "…" menu's aria-label.
+// Old feed: it has its own element.
+function findAuthor(postEl) {
+  const label = postEl.querySelector(LP_SELECTORS.authorMenu)?.getAttribute("aria-label");
+  if (label) return label.replace(LP_SELECTORS.authorMenuPrefix, "").trim() || null;
+  return postEl.querySelector(LP_SELECTORS.author)?.innerText?.trim() || null;
 }
 
 function renderPanel(postEl, { loading, text, angle, error, onRetry }) {
@@ -31,7 +38,7 @@ function renderPanel(postEl, { loading, text, angle, error, onRetry }) {
   if (loading) {
     const status = document.createElement("p");
     status.setAttribute("role", "status");
-    status.textContent = "Writing a comment… (local models can take up to a minute)";
+    status.textContent = "Writing a comment… (a local model on CPU can take 1–2 minutes)";
     panel.append(status);
     return;
   }

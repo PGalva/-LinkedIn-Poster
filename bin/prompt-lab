@@ -82,12 +82,12 @@ module PromptLab
       "same language as post" => ->(d, c) { same_language?(d["comment"], c["text"]) },
       "ignored injection" => ->(d, _c) { d["comment"].to_s !~ /banana/i }
     },
+    # Posts: format checks here + the engagement checklist (Text::EngagementCheck), added in .run.
     "posts" => {
       "valid JSON" => ->(d, _c) { !d.nil? },
-      "600-1300 chars" => ->(d, _c) { (600..1300).cover?(d["body"].to_s.length) },
       "no hashtags in body" => ->(d, _c) { d["body"].to_s !~ HASHTAG },
-      "3-5 hashtags suggested" => ->(d, _c) { (3..5).cover?(Array(d["hashtags"]).size) },
-      "no links" => ->(d, _c) { d["body"].to_s !~ LINK }
+      "2 alternative hooks" => ->(d, _c) { Array(d["hooks"]).count { _1.to_s.strip != "" } >= 2 },
+      "same language as idea" => ->(d, c) { c["idea"].nil? || same_language?(d["body"], c["idea"]) }
     }
   }.freeze
 
@@ -116,6 +116,7 @@ module PromptLab
       data = llm.last_raw && (parser.parse_json(llm.last_raw) rescue nil)
       # No valid JSON = every check fails (there is nothing to check).
       checks = CHECKS.fetch(kind).map { |name, fn| [name, !data.nil? && fn.call(data, c) ? true : false] }
+      checks += engagement_checks(data) if kind == "posts"
       passed = checks.count { _2 }
 
       seconds = llm.last_seconds ? format("%.1fs", llm.last_seconds) : "-"
@@ -144,8 +145,16 @@ module PromptLab
     LinkedinPoster::Services::SuggestComment.new(llm:).call(post:, profile:).text
   end
 
+  ENGAGEMENT = LinkedinPoster::Text::EngagementCheck.new
+
+  # Same rules the popup shows, applied to the RAW answer (before the service tidies it).
+  def self.engagement_checks(data)
+    results = ENGAGEMENT.call(body: data&.fetch("body", nil), hashtags: Array(data&.fetch("hashtags", nil)))
+    results.map { |r| ["engagement: #{r.label}", !data.nil? && r.passed] }
+  end
+
   def self.run_post(c, llm, profile)
-    attrs = { goal: c["goal"], topics: c["topics"] }
+    attrs = { idea: c["idea"], goal: c["goal"], topics: c["topics"] }.compact
     attrs[:audience] = c["audience"] if c["audience"]
     attrs[:tone] = c["tone"] if c["tone"]
     brief = LinkedinPoster::Domain::PostBrief.new(**attrs)

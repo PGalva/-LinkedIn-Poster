@@ -7,3 +7,7 @@ tmp/
 *.log
 _to_delete/
 prompt_lab/runs/
+
+# Chrome "Pack extension" output: the .pem is a private signing key
+*.pem
+*.crx

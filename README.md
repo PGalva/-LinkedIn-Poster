@@ -3,7 +3,8 @@
 An assistant that helps you stay visible on LinkedIn while job hunting:
 
 - **Feed Collector (Chrome extension)** — reads the post you're looking at and suggests a thoughtful comment.
-- **Post Creator (extension popup)** — turns a goal, audience, tone and topics into a ready-to-publish post plus hashtags.
+- **Post Creator (extension popup)** — you write what you want to say in your own words; it returns a post
+  built for engagement (hook, closing question), alternative opening lines, hashtags and a live engagement checklist.
 - **Job-focused ranking** — finds the feed posts about the jobs you want to apply for (e.g. UI/UX Design, Co-op, Developer) and puts hiring posts first.
 
 **You always review before publishing.** The tool suggests; it never posts on your behalf.
@@ -107,10 +108,16 @@ the real `content.js` runs and calls your local AI. Available in development onl
 ### Loading the extension
 
 `chrome://extensions` → enable **Developer mode** → **Load unpacked** → select the `extension/` folder.
+After changing the code, click ↻ on the extension card and reload the LinkedIn tab.
+Don't use **Pack extension**: it's only for distribution and creates a private key (`*.pem`, git-ignored).
 With the API running on `localhost:9292`:
 
 - In the LinkedIn feed, each post gets a **Suggest comment** button.
 - Click the extension icon to open the **Post Creator** popup.
+
+If the button doesn't show up, LinkedIn probably changed its HTML: open the feed, press F12 and run
+`document.querySelectorAll('[role="listitem"][componentkey^="update-card"]').length`. If it's 0, update
+`extension/selectors.js`.
 
 ## API
 
@@ -118,7 +125,8 @@ With the API running on `localhost:9292`:
 | --- | --- | --- | --- |
 | GET | `/health` | — | `{ ok, provider }` |
 | POST | `/comments/suggest` | `{ post: { text, author?, url? } }` | `{ text, angle, provider }` |
-| POST | `/posts/generate` | `{ brief: { goal, topics[], audience?, tone? } }` | `{ body, hashtags[], full_text, provider }` |
+| POST | `/posts/generate` | `{ brief: { idea?, goal?, topics[]?, audience?, tone? } }` (idea or goal) | `{ body, hashtags[], hooks[], checks[], full_text, provider }` |
+| POST | `/posts/check` | `{ body, hashtags[] }` | `[{ id, label, passed, tip }]` — engagement checklist, no AI |
 | POST | `/posts/rank` | `{ posts: [{ text, ... }], limit? }` | `[{ post, score, job_opening, matched_targets, matched_keywords, reason }]` |
 
 Errors: `422` invalid input · `429` AI rate limit · `502` AI provider error.
@@ -129,7 +137,7 @@ Errors: `422` invalid input · `429` AI rate limit · `502` AI provider error.
 lib/linkedin_poster/       The core — plain Ruby, framework-free
   domain/                  Immutable value objects (Data.define) with validation
   llm/                     The LLM port and its adapters — the only code that knows AI providers
-  text/                    Pure functions: keyword matching, hashtags, JSON response parsing
+  text/                    Pure functions: keywords, hashtags, language, engagement checklist, JSON parsing
   prompts/                 Builders that turn domain objects into a provider-neutral Prompt
   services/                Use cases: SuggestComment, GeneratePost, RankPosts
 app/controllers/           Thin Rails controllers

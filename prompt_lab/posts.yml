@@ -1,18 +1,30 @@
-# Evaluation set for the Post Creator prompt.
+# Evaluation set for the Post Creator prompt (v3+: the idea is the main input).
+# Every case is also scored by the engagement checklist (Text::EngagementCheck).
 
 - id: open-to-coop
-  goal: Tell my network I'm looking for a UX co-op for the winter term
-  topics: [UX design, co-op, design system]
+  idea: I'm a UX/UI Design student with 5 years of backend experience and I'm looking for a co-op for the winter term in Vancouver.
+  goal: Get noticed by recruiters
   audience: Recruiters and design leads in Vancouver
-  good: Clear ask in the first lines, one concrete skill/story, a call to action to reach out.
+  good: Clear ask in the first lines, one concrete skill/story, a question that invites people to point to teams or roles.
 
 - id: backend-to-ux
-  goal: Share why I moved from backend engineering to UX
-  topics: [career change, UX engineering, Rails]
-  good: A short story with a real turning point; no clichés; ends with a question to the audience.
+  idea: After years making APIs fast, I realized users never see the API — they see the screen. That's why I moved to UX.
+  goal: Share a lesson learned
+  topics: [career change, UX engineering]
+  good: A short story with a real turning point; no clichés; ends with a specific question about career turns.
 
 - id: accessibility-tip
-  goal: Share a practical accessibility tip from my work
-  topics: [accessibility, React, design system]
+  idea: Most accessibility bugs I find are focus states nobody designed. Designing them in Figma first saves a lot of rework.
+  goal: Share a practical tip
   tone: direct and concise
   good: One actionable tip, explained simply, maybe a before/after. Not a listicle of 10 tips.
+
+- id: portuguese-idea
+  idea: Comecei um diploma de UX/UI depois de anos no backend e o que mais me surpreendeu foi quanto tempo se gasta entendendo o problema antes de desenhar qualquer tela.
+  goal: Compartilhar um aprendizado
+  good: Written in Portuguese, keeps the author's point, ends with a question for designers.
+
+- id: goal-only
+  goal: Show I'm learning design systems
+  topics: [design system, Figma]
+  good: Still works with no idea typed — picks one concrete angle from the facts instead of a generic essay.

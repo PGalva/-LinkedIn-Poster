@@ -1,8 +1,9 @@
 # Roadmap
 
 Everything runs locally with Docker and a local AI (Ollama). Prompt v2 replies in the post's language
-and cites only facts from the resume. Now in Phase 2: the extension runs on a local dev feed; next is
-checking its selectors against the real LinkedIn feed.
+and cites only facts from the resume. Phase 2: selectors updated for LinkedIn's new feed markup (Oct 2026)
+and checked against the real feed. Phase 3: the Post Creator starts from your own idea and reviews the
+post with an engagement checklist.
 
 Each phase is a **vertical slice**: it delivers something that works end to end before the next one starts.
 
@@ -12,7 +13,7 @@ Each phase is a **vertical slice**: it delivers something that works end to end 
 | 0.5 | Environment: Docker, Rails, offline mode, smoke test | Done |
 | 1 | Comment suggestions with a real AI + prompt tuning | Done (v2) |
 | 2 | Chrome extension in the feed | In progress |
-| 3 | Post Creator (extension popup) | Built, needs a real run |
+| 3 | Post Creator (extension popup) | v2 built (idea + engagement), needs a real run |
 | 4 | Job-focused feed ranking | Backend done, extension pending |
 | 5 | History (ActiveRecord + SQLite) and metrics | Not started |
 
@@ -69,8 +70,10 @@ Done when: the button shows up on posts, the suggestion arrives and "Copy" works
 
 - [x] Local dev feed with LinkedIn-like markup: `http://localhost:9292/dev/feed` (development only)
 - [x] Visible errors with "Try again"; button disabled while the AI is writing; "Another one" to regenerate
-- [ ] Load `extension/` in `chrome://extensions`
-- [ ] Verify selectors in DevTools against a real post and fix `selectors.js`
+- [x] Verify selectors against the real feed: LinkedIn moved to random CSS classes; now using
+      `role`, `componentkey`, `data-testid` and `aria-label` (old markup kept as fallback)
+- [x] Dev feed includes a post with the new markup
+- [ ] Load `extension/` with **Load unpacked** (not "Pack extension") and get a real suggestion
 
 Lesson: LinkedIn's DOM is an unstable external "provider", isolated in a single file.
 
@@ -81,10 +84,15 @@ Done when: the popup generates a post + hashtags and you can copy it in one clic
 - [x] Decision: popup inside the extension
 - [x] Form with Goal, Topics, Audience and Tone; remembers the last brief
 - [x] Calls `/posts/generate` through `background.js`; editable body and hashtags; Copy button
+- [x] v2: "What do you want to say?" is the main input; goal is optional; topics/audience/tone under "More options"
+- [x] Prompt v3: hook under 150 chars, one idea, closing question, no links, 2 alternative hooks
+- [x] Engagement checklist without AI (`Text::EngagementCheck`), re-checked live via `POST /posts/check`
+- [ ] Run `bin/prompt-lab posts` on Ollama and record the v3 baseline
 - [ ] Try it with the API running and a real AI provider
 - [ ] Optional: move to React + Vite if the popup grows past one form
 
-Lesson: plain HTML/JS needs no build step; add tooling only when the UI earns it.
+Lesson: plain HTML/JS needs no build step; add tooling only when the UI earns it. And: the AI writes,
+rules review — the checklist is instant, free and testable.
 
 ### Phase 4 — Job-focused feed ranking
 
@@ -147,6 +155,7 @@ Three of the four test levels work fully offline; only the last one needs intern
 | Ranking misses job posts worded differently | Terms are editable per target in `profile.yml`; calibrate in Phase 4 |
 | AI costs go up | Ranking uses no AI; Ollama for development; provider switch by config |
 | Prompt injection in post text | Post is wrapped in `<post>` and the prompt treats it as data only |
+| Engagement rules are folk wisdom | Shown as a checklist, not a score; Phase 5 measures what works for you |
 
 ## Ideas beyond Phase 5
 

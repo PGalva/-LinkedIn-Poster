@@ -10,42 +10,65 @@
       <h1>Post Creator</h1>
 
       <form id="brief-form">
-        <label for="goal">Goal <span aria-hidden="true">*</span></label>
-        <textarea id="goal" name="goal" rows="2" required
-          placeholder="e.g. Show I'm looking for a UX co-op this winter"></textarea>
+        <label for="idea">What do you want to say? <span aria-hidden="true">*</span></label>
+        <textarea id="idea" name="idea" rows="4" required aria-describedby="idea-hint"
+          placeholder="In your own words, even messy. e.g. After years making APIs fast I realized users never see the API, they see the screen. That's why I moved to UX."></textarea>
+        <p class="hint" id="idea-hint">The AI keeps your point and voice, and only uses facts from your profile.</p>
 
-        <label for="topics">Topics <span aria-hidden="true">*</span></label>
-        <input id="topics" name="topics" required placeholder="design system, accessibility, React" />
-        <p class="hint" id="topics-hint">Separate with commas.</p>
+        <label for="goal">Goal</label>
+        <select id="goal" name="goal">
+          <option value="">Choose one (optional)</option>
+          <option>Get noticed by recruiters</option>
+          <option>Share a lesson learned</option>
+          <option>Show a project or skill</option>
+          <option>Start a discussion</option>
+          <option>Share news or an achievement</option>
+        </select>
 
-        <div class="row">
-          <div>
-            <label for="audience">Audience</label>
-            <input id="audience" name="audience" placeholder="Recruiters" />
+        <details>
+          <summary>More options</summary>
+          <label for="topics">Topics</label>
+          <input id="topics" name="topics" placeholder="design system, accessibility" aria-describedby="topics-hint" />
+          <p class="hint" id="topics-hint">Separate with commas. They become your first hashtags.</p>
+
+          <div class="row">
+            <div>
+              <label for="audience">Audience</label>
+              <input id="audience" name="audience" placeholder="Recruiters" />
+            </div>
+            <div>
+              <label for="tone">Tone</label>
+              <select id="tone" name="tone">
+                <option value="">From my profile</option>
+                <option>professional</option>
+                <option>friendly and approachable</option>
+                <option>storytelling</option>
+                <option>direct and concise</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <label for="tone">Tone</label>
-            <select id="tone" name="tone">
-              <option value="">From my profile</option>
-              <option>professional</option>
-              <option>friendly and approachable</option>
-              <option>storytelling</option>
-              <option>direct and concise</option>
-            </select>
-          </div>
-        </div>
+        </details>
 
-        <button type="submit" id="generate">Generate post</button>
+        <button type="submit" id="generate">Write my post</button>
       </form>
 
       <p id="status" role="status" aria-live="polite"></p>
 
-      <section id="result" hidden>
+      <section id="result" hidden aria-label="Generated post">
+        <div id="hooks-block" hidden>
+          <p class="label" id="hooks-label">Other ways to open</p>
+          <ul id="hooks" aria-labelledby="hooks-label"></ul>
+        </div>
+
         <label for="body">Post</label>
-        <textarea id="body" rows="10"></textarea>
+        <textarea id="body" rows="12"></textarea>
 
         <label for="hashtags">Hashtags</label>
         <input id="hashtags" />
+
+        <p class="label" id="checks-label">Engagement checklist</p>
+        <ul id="checks" aria-labelledby="checks-label" aria-live="polite"></ul>
+        <p class="hint">Rules of thumb, not guarantees. They update as you edit.</p>
 
         <button type="button" id="copy">Copy post</button>
         <p class="hint">Review it, then paste it into LinkedIn yourself.</p>

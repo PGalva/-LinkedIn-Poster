@@ -1,23 +1,29 @@
+/* Colors are translucent / inherited so the panel works in LinkedIn's light AND dark themes. */
+
 .lp-button {
+  align-self: flex-start; /* the new feed is a flex column: don't stretch to full width */
+  width: fit-content;
   margin: 8px 16px 0;
   padding: 4px 12px;
-  border: 1px solid #0a66c2;
+  border: 1px solid #378fe9;
   border-radius: 16px;
   background: transparent;
-  color: #0a66c2;
+  color: #378fe9;
   font: 600 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
   cursor: pointer;
 }
 
+.lp-button:hover { background: rgba(55, 143, 233, 0.1); }
 .lp-button:disabled { opacity: 0.6; cursor: progress; }
-.lp-button:focus-visible, .lp-panel button:focus-visible { outline: 2px solid #0a66c2; outline-offset: 2px; }
+.lp-button:focus-visible, .lp-panel button:focus-visible { outline: 2px solid #378fe9; outline-offset: 2px; }
 
 .lp-panel {
   margin: 8px 16px 12px;
   padding: 12px;
+  border: 1px solid rgba(55, 143, 233, 0.35);
   border-radius: 8px;
-  background: #f3f6f8;
-  color: #1d2226;
+  background: rgba(55, 143, 233, 0.08);
+  color: inherit;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -25,20 +31,32 @@
 }
 
 .lp-panel p { margin: 0; }
-.lp-panel textarea { width: 100%; box-sizing: border-box; padding: 8px; font: inherit; resize: vertical; }
-.lp-meta { color: #5e6670; font-size: 12px; }
+
+.lp-panel textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px;
+  border: 1px solid rgba(127, 127, 127, 0.4);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  resize: vertical;
+}
+
+.lp-meta { opacity: 0.75; font-size: 12px; }
 .lp-actions { display: flex; gap: 8px; justify-content: flex-end; }
 
 .lp-panel button {
   padding: 6px 14px;
   border-radius: 16px;
-  border: 1px solid #0a66c2;
+  border: 1px solid #378fe9;
   background: transparent;
-  color: #0a66c2;
+  color: #378fe9;
   font-weight: 600;
   cursor: pointer;
 }
 
-.lp-panel .lp-actions button:last-child { background: #0a66c2; color: #fff; }
+.lp-panel .lp-actions button:last-child { background: #0a66c2; border-color: #0a66c2; color: #fff; }
 
 .lp-panel > button { align-self: flex-start; }

@@ -9,6 +9,7 @@ const API_URL = "http://localhost:9292";
 const ROUTES = {
   "suggest-comment": (msg) => ["/comments/suggest", { post: msg.post }],
   "generate-post": (msg) => ["/posts/generate", { brief: msg.brief }],
+  "check-post": (msg) => ["/posts/check", { body: msg.body, hashtags: msg.hashtags }],
   "rank-posts": (msg) => ["/posts/rank", { posts: msg.posts, limit: msg.limit }],
 };
 

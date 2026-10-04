@@ -126,3 +126,35 @@ class RegistryTest < Minitest::Test
     assert_match(/anthropic, openai, ollama, fake/, error.message)
   end
 end
+
+class HttpTransportTimeoutTest < Minitest::Test
+  include TestSupport
+
+  # A slow AI must become a clear UnavailableError (-> HTTP 502 with a useful message).
+  def test_read_timeout_explains_what_to_do
+    transport = LLM::HttpTransport.new(read_timeout: 7)
+    Net::HTTP.stub_any_instance_request_raise = Net::ReadTimeout
+
+    error = assert_raises(LLM::UnavailableError) do
+      transport.post_json("http://ollama:11434/api/chat", headers: {}, body: {})
+    end
+    assert_match(/longer than 7s/, error.message)
+    assert_match(/OLLAMA_TIMEOUT/, error.message)
+  ensure
+    Net::HTTP.stub_any_instance_request_raise = nil
+  end
+end
+
+# Tiny test seam: make Net::HTTP#request raise without opening a socket.
+class Net::HTTP
+  class << self
+    attr_accessor :stub_any_instance_request_raise
+  end
+
+  alias_method :__original_request, :request
+  def request(*args, &block)
+    raise self.class.stub_any_instance_request_raise if self.class.stub_any_instance_request_raise
+
+    __original_request(*args, &block)
+  end
+end

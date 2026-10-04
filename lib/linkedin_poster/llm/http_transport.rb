@@ -18,6 +18,8 @@ module LinkedinPoster
         Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::EHOSTUNREACH
       ].freeze
 
+      attr_reader :read_timeout
+
       def initialize(open_timeout: 5, read_timeout: 60)
         @open_timeout = open_timeout
         @read_timeout = read_timeout
@@ -35,6 +37,11 @@ module LinkedinPoster
 
         response = http.request(request)
         RawResponse.new(status: response.code.to_i, body: response.body.to_s)
+      rescue Net::ReadTimeout
+        # Connected fine, but the AI took too long to answer (common with local models on CPU).
+        raise UnavailableError, "#{uri.host} took longer than #{@read_timeout}s to answer. " \
+                                "Local models on CPU are slow: try again (the model stays loaded) " \
+                                "or raise the timeout (OLLAMA_TIMEOUT)."
       rescue *NETWORK_ERRORS => e
         raise UnavailableError, "network error calling #{uri.host}: #{e.class}"
       end
