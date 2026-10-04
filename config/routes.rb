@@ -5,4 +5,10 @@ Rails.application.routes.draw do
   post "/comments/suggest", to: "comments#suggest"
   post "/posts/generate",   to: "posts#generate"
   post "/posts/rank",       to: "posts#rank"
+
+  # Local playground for the extension's content script (development only).
+  if Rails.env.development?
+    get "/dev/feed",                 to: "dev#feed"
+    get "/dev/extension/:file",      to: "dev#extension_file", constraints: { file: /[\w.-]+/ }, format: false
+  end
 end

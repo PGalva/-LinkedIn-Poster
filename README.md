@@ -99,6 +99,11 @@ docker compose exec api bin/prompt-lab comments hiring   # only matching cases
 Loop: run → read the answers → change ONE thing in `lib/linkedin_poster/prompts/*` → bump its `VERSION` →
 run again → compare reports. When a real post gets a bad suggestion, add it as a new case.
 
+### Trying the extension without LinkedIn
+
+With the API running, open **http://localhost:9292/dev/feed**: fake posts with LinkedIn's markup, where
+the real `content.js` runs and calls your local AI. Available in development only.
+
 ### Loading the extension
 
 `chrome://extensions` → enable **Developer mode** → **Load unpacked** → select the `extension/` folder.

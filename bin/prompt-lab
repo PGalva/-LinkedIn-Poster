@@ -59,7 +59,7 @@ module PromptLab
   def self.sentences(text) = text.to_s.strip.split(/(?<=[.!?])\s+/).reject(&:empty?).size
 
   # Opens with a short exclamation ("Interesting!", "Que ótima oportunidade!") or a stock reaction.
-  OPENER = /\A\s*(?:(?:[\p{L}'’]+[\s,]*){1,4}!|(?:interesting|interessante|great (?:post|opportunity|point)|que (?:ótima|ótimo|legal)|entendi|love this|amazing))/i
+  OPENER = /\A\s*(?:(?:[\p{L}'’]+[\s,]*){1,4}!|(?:interesting|interessante|great (?:post|opportunity|point)|(?:great|nice|love|so good) to see|que (?:ótima|ótimo|legal)|entendi|love this|amazing))/i
   DETECTOR = LinkedinPoster::Text::LanguageDetector.new
 
   # Same language as the post (skipped when either language can't be detected).

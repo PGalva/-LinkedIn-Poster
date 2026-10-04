@@ -1,17 +1,17 @@
 # Roadmap
 
-The core is built and tested, the HTTP layer now runs on Rails, the feed ranking targets the jobs you
-want to apply for, and the Post Creator lives in the extension popup. Next up: running everything on a
-real machine (Phase 0.5) and the first comment from the real Claude API (Phase 1).
+Everything runs locally with Docker and a local AI (Ollama). Prompt v2 replies in the post's language
+and cites only facts from the resume. Now in Phase 2: the extension runs on a local dev feed; next is
+checking its selectors against the real LinkedIn feed.
 
 Each phase is a **vertical slice**: it delivers something that works end to end before the next one starts.
 
 | Phase | Deliverable | Status |
 | --- | --- | --- |
 | 0 | Ruby core, AI adapters, tests | Done |
-| 0.5 | Environment: Docker, Rails, offline mode, smoke test | In progress |
-| 1 | Comment suggestions with a real AI + prompt tuning | In progress |
-| 2 | Chrome extension in the feed | Not started |
+| 0.5 | Environment: Docker, Rails, offline mode, smoke test | Done |
+| 1 | Comment suggestions with a real AI + prompt tuning | Done (v2) |
+| 2 | Chrome extension in the feed | In progress |
 | 3 | Post Creator (extension popup) | Built, needs a real run |
 | 4 | Job-focused feed ranking | Backend done, extension pending |
 | 5 | History (ActiveRecord + SQLite) and metrics | Not started |
@@ -55,7 +55,9 @@ Done when: 5 real posts get comments you would publish with little or no editing
 - [x] Prompt v2: reply in the post's language (`Text::LanguageDetector`), cite ONLY profile
       `highlights` (taken from the resume), no opening interjection
 - [x] Prompt Lab checks for "no opening interjection" and "same language as post"
-- [ ] Run the v2 lab on Ollama and compare with v1
+- [x] Run the v2 lab on Ollama: 52/54 checks, right language in every case, no invented projects
+- [ ] v3 candidates: one case stretched a fact ("designing systems" for backend work); a job post got
+      one sentence with no link to the profile; "Great to see…" opener (now caught by the lab)
 - [ ] Add 5 real posts from the feed to `prompt_lab/comments.yml` (include 2 job openings)
 - [ ] Re-run the final version on Claude (`LLM_PROVIDER=anthropic`) to compare quality
 
@@ -65,10 +67,10 @@ Lesson: prompts are code. They change through review and tests, not ad hoc.
 
 Done when: the button shows up on posts, the suggestion arrives and "Copy" works.
 
+- [x] Local dev feed with LinkedIn-like markup: `http://localhost:9292/dev/feed` (development only)
+- [x] Visible errors with "Try again"; button disabled while the AI is writing; "Another one" to regenerate
 - [ ] Load `extension/` in `chrome://extensions`
-- [ ] Verify selectors in DevTools and fix `selectors.js`
-- [ ] Handle visible errors: API offline, post without text, AI rate limit
-- [ ] Local test page with fake posts (for offline testing)
+- [ ] Verify selectors in DevTools against a real post and fix `selectors.js`
 
 Lesson: LinkedIn's DOM is an unstable external "provider", isolated in a single file.
 
