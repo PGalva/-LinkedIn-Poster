@@ -9,7 +9,7 @@ An assistant that helps you stay visible on LinkedIn while job hunting:
 **You always review before publishing.** The tool suggests; it never posts on your behalf.
 Why: see [ADR-0001](docs/adr/0001-ruby-core-with-ports-and-adapters.md).
 
-Project status and next steps: [ROADMAP](docs/ROADMAP.md).
+Project status and next steps: [ROADMAP](docs/ROADMAP.md). What changed in each step, file by file: [CHANGELOG](docs/CHANGELOG.md).
 
 ## Architecture
 
