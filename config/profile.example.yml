@@ -1,9 +1,16 @@
-# Copy to config/profile.yml and adjust. This drives comment suggestions,
-# post generation and feed ranking.
+# Copy to config/profile.yml and fill it FROM YOUR RESUME: the resume is the source of
+# truth, and every highlight must be something it actually says. This drives comment
+# suggestions, post generation and feed ranking.
 name: Pedro Barbosa
 headline: UX Engineer & Designer
-language: en-US           # language of the generated text (e.g. en-US, pt-BR)
+language: en-US           # fallback: comments follow each post's language; posts use this one
 tone: direct, curious and jargon-free
+
+# The ONLY experience the AI may cite. Without these it invents projects and numbers.
+highlights:
+  - 5+ years in backend development with Ruby on Rails and Java
+  - Built asynchronous integrations with RabbitMQ
+  - Currently studying UX/UI Design in a co-op program
 
 # The jobs you want to apply for. `terms` are the words recruiters actually use;
 # a post that mentions any term matches the target. Matching ignores case and accents.
@@ -15,7 +22,7 @@ job_targets:
   - name: Developer
     terms: [front-end developer, frontend developer, front-end engineer, web developer, software developer, react developer]
 
-# Skills you want to be seen with. Each one mentioned in a post adds a little to its score.
+# Topics you want to be seen with (interests, not claims). Each one in a post adds to its score.
 keywords:
   - design system
   - accessibility

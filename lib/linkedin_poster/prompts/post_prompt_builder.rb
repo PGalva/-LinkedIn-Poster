@@ -6,7 +6,8 @@ module LinkedinPoster
     # plus the user's profile.
     class PostPromptBuilder
       # Bump on every prompt change so Prompt Lab runs can be compared by version.
-      VERSION = 1
+      # v2: cite only profile highlights; no invented stories.
+      VERSION = 2
 
       def build(brief:, profile:)
         Domain::Prompt.new(
@@ -28,7 +29,8 @@ module LinkedinPoster
           - The first line is a strong hook (no clickbait).
           - Short paragraphs (1 to 3 lines), 600 to 1300 characters in total.
           - End with a call to action that fits the goal.
-          - Never invent numbers, companies or experience.
+          - Use ONLY the facts listed under "Facts about the author" for experience, companies,
+            numbers and stories. Never invent anything beyond them.
           - Do NOT put hashtags in the body; suggest them separately.
 
           Reply ONLY with JSON in this format:
@@ -37,12 +39,17 @@ module LinkedinPoster
       end
 
       def user_prompt(brief, profile)
+        facts = profile.highlights.empty? ? "- (none provided)" : profile.highlights.map { "- #{_1}" }.join("\n")
+
         <<~PROMPT
           Goal: #{brief.goal}
           Audience: #{brief.audience}
           Tone: #{brief.tone || profile.tone}
           Topics: #{brief.topics.join(', ')}
           Roles the author is applying for: #{profile.target_roles.join(', ')}
+
+          Facts about the author:
+          #{facts}
         PROMPT
       end
     end

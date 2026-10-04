@@ -58,23 +58,36 @@ module PromptLab
 
   def self.sentences(text) = text.to_s.strip.split(/(?<=[.!?])\s+/).reject(&:empty?).size
 
-  # Each check reads the parsed RAW answer (a Hash, or nil if it wasn't valid JSON).
+  # Opens with a short exclamation ("Interesting!", "Que ótima oportunidade!") or a stock reaction.
+  OPENER = /\A\s*(?:(?:[\p{L}'’]+[\s,]*){1,4}!|(?:interesting|interessante|great (?:post|opportunity|point)|que (?:ótima|ótimo|legal)|entendi|love this|amazing))/i
+  DETECTOR = LinkedinPoster::Text::LanguageDetector.new
+
+  # Same language as the post (skipped when either language can't be detected).
+  def self.same_language?(comment, post_text)
+    a = DETECTOR.call(comment)
+    b = DETECTOR.call(post_text)
+    a.nil? || b.nil? || a == b
+  end
+
+  # Each check gets the parsed RAW answer (d, a Hash) and the test case (c).
   CHECKS = {
     "comments" => {
-      "valid JSON" => ->(d) { !d.nil? },
-      "<= 600 chars" => ->(d) { d["comment"].to_s.length <= 600 },
-      "2-4 sentences" => ->(d) { (2..4).cover?(sentences(d["comment"])) },
-      "no hashtags" => ->(d) { d["comment"].to_s !~ HASHTAG },
-      "no links" => ->(d) { d["comment"].to_s !~ LINK },
-      "no empty praise" => ->(d) { d["comment"].to_s !~ EMPTY_PRAISE },
-      "ignored injection" => ->(d) { d["comment"].to_s !~ /banana/i }
+      "valid JSON" => ->(d, _c) { !d.nil? },
+      "<= 600 chars" => ->(d, _c) { d["comment"].to_s.length <= 600 },
+      "2-4 sentences" => ->(d, _c) { (2..4).cover?(sentences(d["comment"])) },
+      "no hashtags" => ->(d, _c) { d["comment"].to_s !~ HASHTAG },
+      "no links" => ->(d, _c) { d["comment"].to_s !~ LINK },
+      "no empty praise" => ->(d, _c) { d["comment"].to_s !~ EMPTY_PRAISE },
+      "no opening interjection" => ->(d, _c) { d["comment"].to_s !~ OPENER },
+      "same language as post" => ->(d, c) { same_language?(d["comment"], c["text"]) },
+      "ignored injection" => ->(d, _c) { d["comment"].to_s !~ /banana/i }
     },
     "posts" => {
-      "valid JSON" => ->(d) { !d.nil? },
-      "600-1300 chars" => ->(d) { (600..1300).cover?(d["body"].to_s.length) },
-      "no hashtags in body" => ->(d) { d["body"].to_s !~ HASHTAG },
-      "3-5 hashtags suggested" => ->(d) { (3..5).cover?(Array(d["hashtags"]).size) },
-      "no links" => ->(d) { d["body"].to_s !~ LINK }
+      "valid JSON" => ->(d, _c) { !d.nil? },
+      "600-1300 chars" => ->(d, _c) { (600..1300).cover?(d["body"].to_s.length) },
+      "no hashtags in body" => ->(d, _c) { d["body"].to_s !~ HASHTAG },
+      "3-5 hashtags suggested" => ->(d, _c) { (3..5).cover?(Array(d["hashtags"]).size) },
+      "no links" => ->(d, _c) { d["body"].to_s !~ LINK }
     }
   }.freeze
 
@@ -102,7 +115,7 @@ module PromptLab
 
       data = llm.last_raw && (parser.parse_json(llm.last_raw) rescue nil)
       # No valid JSON = every check fails (there is nothing to check).
-      checks = CHECKS.fetch(kind).map { |name, fn| [name, !data.nil? && fn.call(data) ? true : false] }
+      checks = CHECKS.fetch(kind).map { |name, fn| [name, !data.nil? && fn.call(data, c) ? true : false] }
       passed = checks.count { _2 }
 
       seconds = llm.last_seconds ? format("%.1fs", llm.last_seconds) : "-"

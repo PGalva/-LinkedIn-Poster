@@ -40,6 +40,7 @@ end
   text/keyword_extractor
   text/hashtag_generator
   text/response_parser
+  text/language_detector
 
   prompts/comment_prompt_builder
   prompts/post_prompt_builder

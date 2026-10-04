@@ -50,8 +50,12 @@ Done when: 5 real posts get comments you would publish with little or no editing
 
 - [x] Prompt Lab (`bin/prompt-lab`): evaluation set + automatic rule checks + versioned reports
 - [x] Ollama adapter forces JSON output (`format: "json"`)
-- [ ] Run the Prompt Lab on Ollama and record the v1 baseline
-- [ ] Tune `comment_prompt_builder.rb` one change at a time (bump `VERSION`, compare reports)
+- [x] Run the Prompt Lab on Ollama and record the v1 baseline (rules 7/7, but replied in the wrong
+      language, invented experience and opened with "Interesting!")
+- [x] Prompt v2: reply in the post's language (`Text::LanguageDetector`), cite ONLY profile
+      `highlights` (taken from the resume), no opening interjection
+- [x] Prompt Lab checks for "no opening interjection" and "same language as post"
+- [ ] Run the v2 lab on Ollama and compare with v1
 - [ ] Add 5 real posts from the feed to `prompt_lab/comments.yml` (include 2 job openings)
 - [ ] Re-run the final version on Claude (`LLM_PROVIDER=anthropic`) to compare quality
 
@@ -92,12 +96,22 @@ hiring posts first.
 - [ ] Extension sends visible posts to `/posts/rank` and highlights the top ones with their reason
 - [ ] Calibrate terms and weights with real feed posts
 
+### Phase 4b — Engagement signals (proposed)
+
+Done when: ranking favours posts where a comment will actually be seen, and suggestions avoid
+repeating what top comments already said.
+
+- [ ] Capture what is already on screen: reactions, comments count and post age (no crawling)
+- [ ] Ranking bonus for momentum (engagement relative to age), capped so job relevance still wins
+- [ ] Send the 3 most-liked comments to the prompt as "already said — add something different"
+
 ### Phase 5 — History and metrics
 
 Done when: you can see what was suggested, what you published and what got engagement.
 
 - [ ] Add ActiveRecord + SQLite; suggestions and publications tables
 - [ ] "I published this" action in the extension
+- [ ] Re-capture likes/replies on your own comments later; compare angles (insight, question, experience)
 - [ ] Simple dashboard: comments per week, replies received, job posts engaged with
 
 ## Testing

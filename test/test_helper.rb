@@ -16,6 +16,7 @@ module TestSupport
         { name: "Developer", terms: ["front-end developer", "frontend developer", "software developer"] }
       ],
       keywords: ["design system", "React", "acessibilidade", "Ruby"],
+      highlights: ["5+ years in backend development (Rails, Java)", "Studying a UX/UI Diploma (co-op)"],
       tone: "direto e curioso"
     )
   end

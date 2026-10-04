@@ -10,21 +10,21 @@
     We're hiring! 🎨 Our design team is looking for a UX Design Co-op for the Winter 2027 term.
     You'll work on our design system, run usability tests and ship real features with engineers.
     Students in design, HCI or computer science are welcome. Link to apply in the comments.
-  good: Shows interest with ONE concrete piece of relevant experience (design system, front-end). No begging.
+  good: Replies in English. Shows interest with ONE real fact (e.g. the UX/UI co-op program, backend background). No invented design-system projects, no begging.
 
 - id: vaga-estagio-ux-pt
   author: Rafael Souza, Tech Recruiter
   text: |
     Vaga de estágio em UX/UI Design! Buscamos alguém com conhecimento em Figma, noções de
     acessibilidade e vontade de aprender. Modelo híbrido em São Paulo. Candidate-se pelo link.
-  good: Demonstrates fit (Figma, accessibility) in the profile's language, short and natural.
+  good: Replies in PORTUGUESE (the post's language). Shows fit with a real fact (UX/UI co-op studies). No invented Figma experience.
 
 - id: design-system-opinion
   author: Jordan Lee, Staff Product Designer
   text: |
     Hot take: most design systems fail not because of bad components, but because nobody owns
     the documentation. Tokens without guidelines are just variables. Who owns docs on your team?
-  good: Adds a real point of view or a practical example, or answers the question. No generic agreement.
+  good: Adds a real point of view or answers the question. Must NOT claim design-system work the profile doesn't list.
 
 - id: frontend-dev-hiring
   author: Priya Patel, Engineering Manager
