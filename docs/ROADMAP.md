@@ -15,7 +15,17 @@ Each phase is a **vertical slice**: it delivers something that works end to end 
 | 2 | Chrome extension in the feed | In progress |
 | 3 | Post Creator (extension popup) | v2 built (idea + engagement), needs a real run |
 | 4 | Job-focused feed ranking | Backend done, extension pending |
+| 4c | Audience targeting: who wrote it (recruiter, hiring manager, peer), locations, target companies | Proposed — next |
 | 5 | History (ActiveRecord + SQLite) and metrics | Not started |
+| 6 | Market insights: skill demand from job posts + profile audit | Proposed (needs Phase 5 storage) |
+| 7 | Insight-driven post ideas | Proposed (needs Phase 6) |
+
+**North star:** be seen by the people who can hire you. Everything from 4c to 7 serves it in three ways:
+engage with the feed posts that put you in front of recruiters, hiring managers and the bubble of the
+roles you want; post about what the market asks for; and be findable in recruiter search.
+
+**Where data comes from:** only pages *you* open on LinkedIn (feed, job pages, your own profile).
+The extension reads what is on your screen; it never browses, crawls or acts on its own.
 
 ## Phases and tasks
 
@@ -115,6 +125,23 @@ repeating what top comments already said.
 - [ ] Ranking bonus for momentum (engagement relative to age), capped so job relevance still wins
 - [ ] Send the 3 most-liked comments to the prompt as "already said — add something different"
 
+### Phase 4c — Audience targeting (proposed, next)
+
+Done when: the ranking knows *who* wrote a post, not only *what* it says, and favours the places and
+companies you are aiming for.
+
+- [ ] Read the author's headline from the feed (it's on screen next to the name) and validate the selector
+- [ ] `audiences` in the profile: terms per author type — recruiter ("Talent Acquisition", "Recruiter",
+      "Recrutador"), hiring manager ("Head of Design", "Design Manager", "Engineering Manager"),
+      bubble reference ("Senior Product Designer", "UX Lead"), peer (everything else)
+- [ ] `locations` (e.g. Vancouver, BC, Canada, Remote) and `target_companies` in the profile
+- [ ] Ranking bonus for author type, location and target company; `reason` explains it
+      ("Hiring manager · Vancouver · UI/UX Design")
+- [ ] Comment prompt adapts to the author: recruiter → short, one relevant fact, no asking for a job;
+      peer → add an idea or a technical question
+
+Lesson: same pattern as `JobTarget` — editable lists in the profile, rules in Ruby, no AI.
+
 ### Phase 5 — History and metrics
 
 Done when: you can see what was suggested, what you published and what got engagement.
@@ -123,6 +150,51 @@ Done when: you can see what was suggested, what you published and what got engag
 - [ ] "I published this" action in the extension
 - [ ] Re-capture likes/replies on your own comments later; compare angles (insight, question, experience)
 - [ ] Simple dashboard: comments per week, replies received, job posts engaged with
+
+### Phase 6 — Market insights and profile audit (proposed)
+
+Done when: you can see which skills the job posts you see ask for most, and which of them your
+profile doesn't show.
+
+- [ ] Store every job post the extension sees (text, author type, location, date) — only what was on
+      your screen, deduplicated, no crawling
+- [ ] Read **job pages** you open (`linkedin.com/jobs/view/…`): full description, company, location,
+      seniority. Much richer than a "we're hiring" feed post — the main source for skill demand
+- [ ] Read **your own profile page** when you open it (headline, About) so the audit compares against
+      what recruiters actually see, not only `profile.yml`
+- [ ] `skills.yml`: a curated vocabulary of skills with synonyms ("usability testing" = "user testing",
+      "testes de usabilidade"); count matches, not every word
+- [ ] `MarketInsights` service: demand per skill (% of job posts that mention it), trend
+      (last 14 days vs before), filtered by target role and location
+- [ ] Profile audit: compare demand with your headline, highlights and keywords and sort each skill into
+      **shown** (in headline), **hidden** (you have it — it's in your highlights — but the headline
+      doesn't say it) or **gap** (not in your profile at all)
+- [ ] Popup or dev page: "8 of 10 UX co-op posts mention *usability testing* — it's in your highlights,
+      not in your headline"
+- [ ] Optional: AI as a second pass to propose new vocabulary terms the list misses (you approve them)
+
+Lesson: counting is code; the AI only suggests vocabulary. And: recruiters find people through
+profile search, so the headline matters as much as comments and posts.
+
+### Phase 7 — Insight-driven post ideas (proposed)
+
+Done when: the Post Creator can suggest what to post next, based on what the market asks for and
+what you can honestly show.
+
+- [ ] `PostIdeas` service turns insights into briefs for the existing `GeneratePost`:
+      - **hidden** skill + a matching highlight → proof post ("how I used X at work")
+      - **gap** skill → learning-in-public post ("week 1 learning X: what surprised me") — never claims
+        experience you don't have
+      - trending topic in your bubble → opinion/discussion post with a closing question
+- [ ] Popup: "Suggested next posts" list; picking one pre-fills the idea and topics
+- [ ] Rotate skills so posts cover what the market wants over a few weeks, not the same one every time
+- [ ] With Phase 5: measure which ideas got reactions and, above all, replies from recruiters and
+      hiring managers; favour what works for you
+- [ ] Optional: read your own stats page when you open it (profile views, search appearances) to see
+      whether the posts move the needle with hiring people
+
+Lesson: the AI never decides *what* is in demand — the data does. The AI only writes the post
+from a brief built from facts.
 
 ## Testing
 
@@ -145,6 +217,8 @@ Three of the four test levels work fully offline; only the last one needs intern
 | Publishing | Suggest only; the user reviews and publishes | Full automation violates LinkedIn's Terms and risks the account |
 | What "best posts" means | Posts about the jobs you want, hiring posts first | The goal is applying, not general engagement |
 | Post Creator location | Extension popup | One install, available on any page |
+| Data sources | Only LinkedIn pages you open (feed, job pages, your profile) | Richer data without crawling or automation; stays within LinkedIn's Terms |
+| North star | Be seen by people who can hire you | Ranking, comments and post ideas are all judged by it |
 
 ## Risks
 
@@ -156,10 +230,11 @@ Three of the four test levels work fully offline; only the last one needs intern
 | AI costs go up | Ranking uses no AI; Ollama for development; provider switch by config |
 | Prompt injection in post text | Post is wrapped in `<post>` and the prompt treats it as data only |
 | Engagement rules are folk wisdom | Shown as a checklist, not a score; Phase 5 measures what works for you |
+| Market insights from a small sample | Show counts ("8 of 10 posts"), not just percentages; filter by role and location |
+| Post ideas push you to claim skills you don't have | Gap skills only become learning-in-public posts; facts still come only from highlights |
 
 ## Ideas beyond Phase 5
 
 - Suggest 2–3 comment angles to choose from
 - Schedule posts for peak reach times
-- Follow specific recruiters and prioritize their posts
 - Use the AI as a second pass to classify ambiguous job posts the rules miss
