@@ -28,6 +28,24 @@ class SuggestCommentTest < Minitest::Test
     assert_includes prompt.system, "Pedro"
   end
 
+  def test_prompt_adapts_to_a_recruiter_author
+    llm = LLM::Adapters::Fake.new
+    post = Domain::CapturedPost.new(text: "Three things I look for in a junior designer portfolio.",
+                                    author: "Ana", author_headline: "Tech Recruiter | Design & Engineering")
+    Services::SuggestComment.new(llm:).call(post:, profile:)
+
+    prompt = llm.prompts.last
+    assert_includes prompt.user, "Approach: The author is a RECRUITER"
+    assert_includes prompt.user, "<author>\nAna — Tech Recruiter | Design & Engineering\n</author>"
+  end
+
+  def test_unknown_author_gets_the_peer_approach
+    llm = LLM::Adapters::Fake.new
+    Services::SuggestComment.new(llm:).call(post: captured_post, profile:)
+
+    assert_includes llm.prompts.last.user, "Approach: The author is a PEER"
+  end
+
   def test_llm_errors_bubble_up_as_llm_errors
     llm = LLM::Adapters::Fake.new(error: LLM::RateLimitedError.new("calma"))
     assert_raises(LLM::RateLimitedError) { Services::SuggestComment.new(llm:).call(post: captured_post, profile:) }

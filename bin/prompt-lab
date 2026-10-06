@@ -141,7 +141,7 @@ module PromptLab
   end
 
   def self.run_comment(c, llm, profile)
-    post = LinkedinPoster::Domain::CapturedPost.new(text: c["text"], author: c["author"])
+    post = LinkedinPoster::Domain::CapturedPost.new(text: c["text"], author: c["author"], author_headline: c["headline"])
     LinkedinPoster::Services::SuggestComment.new(llm:).call(post:, profile:).text
   end
 

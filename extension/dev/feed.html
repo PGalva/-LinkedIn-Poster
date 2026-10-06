@@ -24,6 +24,7 @@
       .new-card { background: #fff; border: 1px solid #e0dfdc; border-radius: 8px; padding-bottom: 12px; display: flex; flex-direction: column; }
       .new-actor { display: flex; justify-content: space-between; padding: 12px 16px 0; }
       .new-actor button { border: 0; background: none; cursor: pointer; }
+      .new-actor span { display: block; color: #5e6670; font-size: 12px; }
       [data-testid="expandable-text-box"] { display: block; padding: 8px 16px 0; }
       .permalink { display: block; padding: 8px 16px 0; color: #5e6670; font-size: 12px; }
     </style>
@@ -77,15 +78,37 @@
       <!-- Current LinkedIn markup (Oct 2026): random CSS classes, stable role/componentkey/data-testid/aria-label. -->
       <div role="listitem" componentkey="update-card-focus-dev4" class="new-card">
         <div class="new-actor">
-          <strong>Priya Nair</strong>
+          <div>
+            <strong>Priya Nair</strong>
+            <span>Head of Design at Northwind · Vancouver, BC</span>
+            <span>2 h</span>
+          </div>
           <button type="button" aria-label="Open control menu for post by Priya Nair">…</button>
         </div>
         <span data-testid="expandable-text-box">Design leads: what do you look for in a junior UX portfolio? I review ~30 a week and the ones that stand out show the messy middle, not just the final screens.</span>
       </div>
 
+      <div role="listitem" componentkey="update-card-focus-dev5" class="new-card">
+        <div class="new-actor">
+          <div>
+            <strong>Sam Okafor</strong>
+            <span>• 2nd</span>
+            <span>Senior Technical Recruiter | Hiring designers and engineers</span>
+            <span>5 h</span>
+          </div>
+          <button type="button" aria-label="Open control menu for post by Sam Okafor">…</button>
+        </div>
+        <span data-testid="expandable-text-box">The portfolios that get my attention show how you decided what to build — the messy middle and the trade-offs. Designers: what's one decision you'd explain in an interview?</span>
+      </div>
+
+      <!-- Not a post: no text box, so it must NOT get a button (like "Who viewed your profile"). -->
+      <div role="listitem" componentkey="update-card-focus-dev6" class="new-card">
+        <div class="new-actor"><div><strong>Who viewed your profile</strong></div></div>
+      </div>
+
       <div class="feed-shared-update-v2">
         <span class="update-components-actor__title"><span aria-hidden="true">Broken markup</span></span>
-        <div class="something-else">This post has no text element the selectors know — it should show the "couldn't find this post's text" error.</div>
+        <div class="something-else">This post has no text element the selectors know — since v0.7 it gets no button at all (only posts with text do).</div>
       </div>
     </main>
 

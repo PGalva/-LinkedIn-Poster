@@ -60,3 +60,16 @@
 .lp-panel .lp-actions button:last-child { background: #0a66c2; border-color: #0a66c2; color: #fff; }
 
 .lp-panel > button { align-self: flex-start; }
+
+/* Ranking badge: why this post helps you get seen by people who hire */
+.lp-badge {
+  align-self: flex-start;
+  margin: 6px 16px 0;
+  padding: 2px 10px;
+  border-radius: 12px;
+  background: rgba(127, 127, 127, 0.14);
+  color: inherit;
+  font: 600 12px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.lp-badge--high { background: rgba(5, 118, 66, 0.16); }

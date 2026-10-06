@@ -56,4 +56,59 @@ class RankPostsTest < Minitest::Test
     assert_equal ["UX Engineer"], old.target_roles
     assert_equal ["UX Engineer"], old.job_targets.first.terms
   end
+
+  # ---- Phase 4c: who wrote it, where, which company ----
+
+  def vancouver_profile
+    Domain::UserProfile.from_h(
+      name: "Pedro", job_targets: [{ name: "UI/UX Design", terms: ["ux designer"] }],
+      locations: ["Vancouver"], target_companies: ["Acme Design"]
+    )
+  end
+
+  def rank_with(profile, *posts)
+    Services::RankPosts.new.call(posts: posts.map { Domain::CapturedPost.new(**_1) }, profile:)
+  end
+
+  def test_recruiter_post_ranks_even_without_job_words
+    first = rank_with(vancouver_profile, { text: "Tips for a strong first week at a new job", author_headline: "Senior Talent Acquisition Partner" }).first
+
+    assert_equal "recruiter", first.author_type
+    assert_equal 4, first.score
+    assert_equal "Recruiter", first.reason
+  end
+
+  def test_hiring_manager_in_vancouver_at_target_company_beats_a_peer_saying_the_same
+    same = "Our team is hiring a UX designer. Apply now!"
+    ranked = rank_with(vancouver_profile,
+                       { text: same, author: "Peer", author_headline: "UX Designer" },
+                       { text: "#{same} Based in Vancouver.", author: "Maya", author_headline: "Design Manager at Acme Design" })
+
+    best, peer = ranked
+    assert_equal "Maya", best.post.author
+    assert_equal "hiring_manager", best.author_type
+    assert_equal ["Acme Design"], best.matched_companies
+    assert_equal ["Vancouver"], best.matched_locations
+    assert_equal 3 + 5 + 4 + 3 + 2, best.score
+    assert_equal "Hiring manager · Job opening · Acme Design · Vancouver · UI/UX Design", best.reason
+    assert_nil peer.author_type
+  end
+
+  def test_company_page_counts_as_target_company_by_author_name
+    first = rank_with(vancouver_profile, { text: "Our design culture", author: "Acme Design" }).first
+
+    assert_equal ["Acme Design"], first.matched_companies
+  end
+
+  def test_profile_without_audiences_uses_defaults
+    assert_equal %w[recruiter hiring_manager bubble], profile.audiences.map(&:type)
+  end
+
+  def test_custom_audiences_from_profile_keep_their_order
+    custom = Domain::UserProfile.from_h(name: "P", audiences: [{ type: "mentor", terms: ["mentor"] }])
+    audience = Text::AuthorClassifier.new.call(headline: "UX Mentor", audiences: custom.audiences)
+
+    assert_equal "mentor", audience.type
+    assert_equal "Mentor", audience.label
+  end
 end

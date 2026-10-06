@@ -73,8 +73,15 @@ job_targets:
     terms: [coop, internship, intern, work term, estágio]
 ```
 
-Scoring: **+3** per target mentioned, **+5** when it is also a hiring post ("we're hiring", "apply now",
-"vaga"...), **+1** per profile keyword. A hiring post for a role you don't target scores nothing.
+Scoring — what the post says: **+3** per target mentioned, **+5** when it is also a hiring post
+("we're hiring", "apply now", "vaga"...), **+1** per profile keyword. A hiring post for a role you don't
+target scores nothing.
+
+Scoring — who wrote it and where: the extension reads the author's headline, and the profile's
+`audiences` decide who they are: **+4** recruiter, **+4** hiring manager, **+2** reference in your field.
+Plus **+3** per `target_companies` and **+2** per `locations` mentioned. Posts that score get a badge in
+the feed explaining why ("🎯 Hiring manager · Vancouver · UI/UX Design"), and the comment prompt adapts
+to the author (a recruiter gets a short peer-like comment, never a job request).
 
 ### Choosing an AI provider
 
@@ -124,10 +131,10 @@ If the button doesn't show up, LinkedIn probably changed its HTML: open the feed
 | Method | Path | Body | Returns |
 | --- | --- | --- | --- |
 | GET | `/health` | — | `{ ok, provider }` |
-| POST | `/comments/suggest` | `{ post: { text, author?, url? } }` | `{ text, angle, provider }` |
+| POST | `/comments/suggest` | `{ post: { text, author?, author_headline?, url? } }` | `{ text, angle, provider }` |
 | POST | `/posts/generate` | `{ brief: { idea?, goal?, topics[]?, audience?, tone? } }` (idea or goal) | `{ body, hashtags[], hooks[], checks[], full_text, provider }` |
 | POST | `/posts/check` | `{ body, hashtags[] }` | `[{ id, label, passed, tip }]` — engagement checklist, no AI |
-| POST | `/posts/rank` | `{ posts: [{ text, ... }], limit? }` | `[{ post, score, job_opening, matched_targets, matched_keywords, reason }]` |
+| POST | `/posts/rank` | `{ posts: [{ text, author?, author_headline? }], limit? }` | `[{ post, score, job_opening, matched_targets, matched_keywords, author_type, author_label, matched_locations, matched_companies, reason }]` |
 
 Errors: `422` invalid input · `429` AI rate limit · `502` AI provider error.
 

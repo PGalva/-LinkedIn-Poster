@@ -3,6 +3,32 @@
 Where the code changed, and why — one section per step, newest first.
 Paths are relative to the repository root. See [ROADMAP](ROADMAP.md) for what comes next.
 
+## 0.7.0 — Phase 4c: who wrote the post (audience targeting)
+
+**Why:** the north star is to be seen by people who can hire you. Until now the ranking only
+looked at *what* a post says; now it also knows *who* wrote it (recruiter, hiring manager,
+reference in your field, peer) and *where* (your locations and target companies).
+
+| Area | File | Change |
+| --- | --- | --- |
+| Domain | `lib/linkedin_poster/domain/audience.rb` | **New.** A kind of author + the words their headlines use; built-in defaults (EN/PT) |
+| Domain | `lib/linkedin_poster/domain/user_profile.rb` | `audiences` (defaults if absent), `locations`, `target_companies` |
+| Domain | `lib/linkedin_poster/domain/captured_post.rb` | Optional `author_headline` |
+| Domain | `lib/linkedin_poster/domain/ranked_post.rb` | `author_type`, `author_label`, `matched_locations`, `matched_companies`; `reason` starts with who |
+| Text rules | `lib/linkedin_poster/text/author_classifier.rb` | **New.** Headline → first matching audience (profile order = priority), no AI |
+| Services | `lib/linkedin_poster/services/rank_posts.rb` | +4 recruiter, +4 hiring manager, +2 field reference, +3 per target company, +2 per location |
+| Prompts | `lib/linkedin_poster/prompts/comment_prompt_builder.rb` | v3: an "Approach" line per author type; author name/headline go inside `<author>` and are treated as data |
+| Services | `lib/linkedin_poster/services/suggest_comment.rb` | Classifies the author and passes it to the prompt |
+| HTTP | `app/controllers/comments_controller.rb`, `posts_controller.rb` | Accept `author_headline` |
+| Extension | `extension/selectors.js`, `content.js` | Reads the author's headline (lines between the name and the post text, skipping known noise); buttons only on cards with post text; **ranking badges** via `/posts/rank` |
+| Extension | `extension/content.css`, `dev/feed.html` | Badge style; dev feed gains a hiring manager, a recruiter and a non-post card |
+| Config | `config/profile.example.yml` | `locations`, `target_companies`, optional `audiences` |
+| Prompt Lab | `prompt_lab/comments.yml`, `bin/prompt-lab` | Cases carry the author's headline; new recruiter case |
+| Tests | `test/text/author_classifier_test.rb` | **New.** Real headline shapes, priority, peers |
+| Tests | `test/services/rank_posts_test.rb`, `services_test.rb`, `test/integration/api_test.rb` | Audience/location/company scoring, prompt approach, `author_headline` through the API |
+
+Private, not in git: `config/profile.yml` gains `locations` (Vancouver, Burnaby, British Columbia) and an empty `target_companies`.
+
 ## 0.6.1 — Slow local models: clear timeout and faster posts
 
 **Why:** on CPU, Ollama took longer than 180 s to write a post and the popup only said

@@ -7,10 +7,14 @@ module LinkedinPoster
     #
     # highlights: true facts the AI may cite ("5+ years in backend: Rails, Java").
     #   The AI is told to mention ONLY these — without them, it invents experience.
+    # audiences:  the kinds of post authors you want to be seen by (recruiters, hiring
+    #   managers, references in your field). Defaults to Audience.defaults.
+    # locations / target_companies: where you want to work; posts that mention them rank higher.
     #
     # Why Data.define? Immutable value objects: once built, no service can
     # change the profile "by accident" halfway through a request.
-    UserProfile = Data.define(:name, :headline, :job_targets, :keywords, :highlights, :tone, :language) do
+    UserProfile = Data.define(:name, :headline, :job_targets, :keywords, :highlights, :tone, :language,
+                              :audiences, :locations, :target_companies) do
       def self.from_h(hash)
         h = hash.transform_keys(&:to_sym)
         new(
@@ -18,11 +22,16 @@ module LinkedinPoster
           headline: h.fetch(:headline, ""),
           job_targets: parse_job_targets(h),
           keywords: Array(h[:keywords]),
-          highlights: Array(h[:highlights]).map { _1.to_s.strip }.reject(&:empty?),
+          highlights: list(h[:highlights]),
           tone: h.fetch(:tone, "professional and approachable"),
-          language: h.fetch(:language, "en-US")
+          language: h.fetch(:language, "en-US"),
+          audiences: h[:audiences] ? Array(h[:audiences]).map { Audience.from_h(_1) } : Audience.defaults,
+          locations: list(h[:locations]),
+          target_companies: list(h[:target_companies])
         )
       end
+
+      def self.list(value) = Array(value).map { _1.to_s.strip }.reject(&:empty?)
 
       # Accepts the new `job_targets:` list, or the older `target_roles:` list of
       # plain strings (each role becomes a target with no extra terms).

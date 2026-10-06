@@ -27,5 +27,13 @@ const LP_SELECTORS = {
   authorMenuPrefix: /^(Abrir menu de controle da publicação de|Open control menu for post by)\s+/,
 
   author: ".update-components-actor__title span[aria-hidden='true'], .update-components-actor__name",
+  authorHeadline: ".update-components-actor__description span[aria-hidden='true'], .update-components-actor__description", // old feed
+
+  // Current feed: the author's headline has NO stable attribute. We read the post's text lines
+  // between the author's name and the post text and skip the known noise below.
+  // Checked on the real feed (Oct 2026): 11 of 13 cards; the rest were company pages or job updates.
+  headerNoise: /^(…|\.\.\.|\d+º(\s*e\s*\+)?|\d+(st|nd|rd|th)\+?|\+?\s*(Seguir|Follow)|Promovida|Promoted|Promovida pela empresa.*|Promoted by.*|Sugestões|Suggested|Publicação no feed|Feed post|Editado|Edited|Verificado|Verified|Conectar|Connect|Acesse o site|Visit (the )?website|Saiba mais|Learn more|💡 Suggest comment|[🎯💼✨] .*)$/i,
+  headerTime: /^(há\s+)?\d+\s*(s|seg|min|h|d|sem|w|m|mo|a|y|anos?|meses?|dias?|horas?)\b/i,
+  headerFollowers: /\b[\d.,]+\s*(mil\s+)?(seguidores|followers)\b/i, // only company pages show followers there
   permalink: "a[href*='/feed/update/']",
 };

@@ -12,6 +12,6 @@ class CommentsController < ApplicationController
   private
 
   def post_params
-    params.require(:post).permit(:text, :author, :url)
+    params.require(:post).permit(:text, :author, :author_headline, :url)
   end
 end

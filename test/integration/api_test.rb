@@ -51,6 +51,17 @@ class ApiTest < ActionDispatch::IntegrationTest
     assert_match(/UX Designer co-op/, first["post"]["text"])
   end
 
+  test "ranking uses the author's headline" do
+    post "/posts/rank", params: { posts: [
+      { text: "What I look for in a junior portfolio", author: "Sam", author_headline: "Senior Technical Recruiter" }
+    ] }, as: :json
+
+    assert_response :success
+    first = response.parsed_body.first
+    assert_equal "recruiter", first["author_type"]
+    assert_equal "Recruiter", first["reason"]
+  end
+
   test "missing brief is rejected with 422" do
     post "/posts/generate", params: {}, as: :json
 

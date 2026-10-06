@@ -15,8 +15,10 @@ module LinkedinPoster
       def initialize(llm:,
                      prompt_builder: Prompts::CommentPromptBuilder.new,
                      parser: Text::ResponseParser.new,
-                     language_detector: Text::LanguageDetector.new)
+                     language_detector: Text::LanguageDetector.new,
+                     classifier: Text::AuthorClassifier.new)
         @llm = llm
+        @classifier = classifier
         @prompt_builder = prompt_builder
         @parser = parser
         @language_detector = language_detector
@@ -25,7 +27,9 @@ module LinkedinPoster
       def call(post:, profile:)
         # Reply in the post's language; fall back to the profile's when unsure.
         language = @language_detector.language_name(post.text) || profile.language
-        prompt = @prompt_builder.build(post:, profile:, language:)
+        # Who wrote it decides the approach (recruiter, hiring manager, field reference, peer).
+        audience = @classifier.call(headline: post.author_headline, audiences: profile.audiences)
+        prompt = @prompt_builder.build(post:, profile:, language:, audience:)
         response = @llm.complete(prompt)
         data = @parser.parse_json(response.text, required_keys: %w[comment])
 

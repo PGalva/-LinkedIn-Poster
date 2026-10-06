@@ -1,9 +1,9 @@
 # Roadmap
 
-Everything runs locally with Docker and a local AI (Ollama). Prompt v2 replies in the post's language
-and cites only facts from the resume. Phase 2: selectors updated for LinkedIn's new feed markup (Oct 2026)
-and checked against the real feed. Phase 3: the Post Creator starts from your own idea and reviews the
-post with an engagement checklist.
+Everything runs locally with Docker and a local AI (Ollama). The extension works on the real feed
+(new markup, Oct 2026): it suggests comments, badges the posts worth engaging with and knows who wrote
+them (recruiter, hiring manager, field reference, peer). The Post Creator starts from your own idea.
+Next: calibrate 4c with real use, then engagement signals (4b) and history (5).
 
 Each phase is a **vertical slice**: it delivers something that works end to end before the next one starts.
 
@@ -14,8 +14,8 @@ Each phase is a **vertical slice**: it delivers something that works end to end 
 | 1 | Comment suggestions with a real AI + prompt tuning | Done (v2) |
 | 2 | Chrome extension in the feed | In progress |
 | 3 | Post Creator (extension popup) | v2 built (idea + engagement), needs a real run |
-| 4 | Job-focused feed ranking | Backend done, extension pending |
-| 4c | Audience targeting: who wrote it (recruiter, hiring manager, peer), locations, target companies | Proposed — next |
+| 4 | Job-focused feed ranking | Done: badges in the feed (v0.7) |
+| 4c | Audience targeting: who wrote it (recruiter, hiring manager, peer), locations, target companies | Done (v0.7) — calibrate with real use |
 | 5 | History (ActiveRecord + SQLite) and metrics | Not started |
 | 6 | Market insights: skill demand from job posts + profile audit | Proposed (needs Phase 5 storage) |
 | 7 | Insight-driven post ideas | Proposed (needs Phase 6) |
@@ -113,7 +113,7 @@ hiring posts first.
 - [x] Scoring: +3 per target, +5 if it is a hiring post for a target, +1 per keyword
 - [x] Hiring signals in English and Portuguese
 - [x] `reason` explains each score ("Job opening · UI/UX Design, Co-op")
-- [ ] Extension sends visible posts to `/posts/rank` and highlights the top ones with their reason
+- [x] Extension sends visible posts to `/posts/rank` and badges the ones that score, with their reason
 - [ ] Calibrate terms and weights with real feed posts
 
 ### Phase 4b — Engagement signals (proposed)
@@ -125,22 +125,27 @@ repeating what top comments already said.
 - [ ] Ranking bonus for momentum (engagement relative to age), capped so job relevance still wins
 - [ ] Send the 3 most-liked comments to the prompt as "already said — add something different"
 
-### Phase 4c — Audience targeting (proposed, next)
+### Phase 4c — Audience targeting (done in v0.7)
 
 Done when: the ranking knows *who* wrote a post, not only *what* it says, and favours the places and
 companies you are aiming for.
 
-- [ ] Read the author's headline from the feed (it's on screen next to the name) and validate the selector
-- [ ] `audiences` in the profile: terms per author type — recruiter ("Talent Acquisition", "Recruiter",
+- [x] Read the author's headline from the feed (it's on screen next to the name) and validate the selector
+- [x] `audiences` in the profile: terms per author type — recruiter ("Talent Acquisition", "Recruiter",
       "Recrutador"), hiring manager ("Head of Design", "Design Manager", "Engineering Manager"),
       bubble reference ("Senior Product Designer", "UX Lead"), peer (everything else)
-- [ ] `locations` (e.g. Vancouver, BC, Canada, Remote) and `target_companies` in the profile
-- [ ] Ranking bonus for author type, location and target company; `reason` explains it
+- [x] `locations` (e.g. Vancouver, BC, Canada, Remote) and `target_companies` in the profile
+- [x] Ranking bonus for author type, location and target company; `reason` explains it
       ("Hiring manager · Vancouver · UI/UX Design")
-- [ ] Comment prompt adapts to the author: recruiter → short, one relevant fact, no asking for a job;
+- [x] Comment prompt adapts to the author: recruiter → short, one relevant fact, no asking for a job;
       peer → add an idea or a technical question
 
+- [x] Buttons only on cards with post text (skips "Who viewed your profile", job anniversaries)
+- [ ] Calibrate: watch the badges for a week; add missing headline terms to `audiences` and fill `target_companies`
+- [ ] Run the comment Prompt Lab (v3) on Ollama, especially the new recruiter case
+
 Lesson: same pattern as `JobTarget` — editable lists in the profile, rules in Ruby, no AI.
+Headline reading has no stable HTML hook, so it relies on the order of the lines; verified on the real feed.
 
 ### Phase 5 — History and metrics
 

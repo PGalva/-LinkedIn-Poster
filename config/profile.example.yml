@@ -29,3 +29,22 @@ keywords:
   - React
   - Figma
   - Ruby on Rails
+
+# Where you want to work: posts that mention these rank higher (+2 each).
+locations:
+  - Vancouver
+  - British Columbia
+
+# Companies you'd love to work for (+3 when the post, its author or headline mentions one).
+target_companies: []
+
+# Who you want to be seen by, detected from the post author's headline. Order = priority.
+# Leave this out to use the built-in list in lib/linkedin_poster/domain/audience.rb
+# (recruiter +4, hiring manager +4, field reference +2; any custom type +2).
+# audiences:
+#   - type: recruiter
+#     label: Recruiter
+#     terms: [recruiter, talent acquisition, recrutadora]
+#   - type: hiring_manager
+#     label: Hiring manager
+#     terms: [head of design, design manager, engineering manager]

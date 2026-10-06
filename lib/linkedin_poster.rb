@@ -18,6 +18,7 @@ end
 #  quem depende de quem.)
 %w[
   domain/job_target
+  domain/audience
   domain/user_profile
   domain/captured_post
   domain/post_brief
@@ -42,6 +43,7 @@ end
   text/response_parser
   text/language_detector
   text/engagement_check
+  text/author_classifier
 
   prompts/comment_prompt_builder
   prompts/post_prompt_builder

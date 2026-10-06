@@ -21,7 +21,7 @@ class PostsController < ApplicationController
   # Extension -> "which of these feed posts are about the jobs I want?"
   def rank
     posts = params.require(:posts).map do |raw|
-      LinkedinPoster::Domain::CapturedPost.new(**raw.permit(:text, :author, :url).to_h.symbolize_keys)
+      LinkedinPoster::Domain::CapturedPost.new(**raw.permit(:text, :author, :author_headline, :url).to_h.symbolize_keys)
     end
     limit = params.fetch(:limit, 10).to_i
     ranked = LinkedinPoster::Services::RankPosts.new.call(posts:, profile:, limit:)
